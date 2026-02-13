@@ -27,17 +27,7 @@ namespace Jellyfin.Plugin.Kindle
             try 
             {
                 _logger.LogInformation("##################################################");
-                _logger.LogInformation("[KINDLE] PLUGIN KONSTRUKTOR WIRD AUSGEFÜHRT!");
-                _logger.LogInformation("[KINDLE] GUID: {Guid}", Id);
-                
-                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-                var resources = assembly.GetManifestResourceNames();
-                _logger.LogInformation("[KINDLE] Gefundene Ressourcen: {Count}", resources.Length);
-                
-                foreach (var res in resources)
-                {
-                    _logger.LogInformation("[KINDLE] -> RESSOURCE: {Resource}", res);
-                }
+                _logger.LogInformation("[KINDLE] PLUGIN KONSTRUKTOR WIRD AUSGEFÜHRT!");                
                 _logger.LogInformation("##################################################");
             }
             catch (Exception ex)

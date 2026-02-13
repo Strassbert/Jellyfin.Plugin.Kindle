@@ -1,57 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8" />
-    </head>
-
-    <body>
-
-<div id="KindleSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-checkbox,emby-select">
-    <div data-role="content">
-        <div class="content-primary">
-            <form id="kindleConfigForm">
-                <section class="configSection">
-                    <h2 class="sectionTitle">SMTP Server Einstellungen</h2>
+<html>
+<head>
+    <title>Kindle Share</title>
+</head>
+<body>
+    <div id="KindleSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <h1>Kindle Share Konfiguration</h1>
+                <form id="kindleConfigForm">
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host (z.B. smtp.gmail.com)" required />
+                        <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host" required />
+                        <div class="fieldDescription">Der SMTP Server deines E-Mail Anbieters.</div>
                     </div>
                     <div class="inputContainer">
                         <input is="emby-input" type="number" id="SmtpPort" label="SMTP Port" required />
                     </div>
-                    <div class="checkboxContainer checkboxContainer-withDescription">
-                        <label>
-                            <input is="emby-checkbox" type="checkbox" id="UseSsl" />
-                            <span>SSL/TLS verwenden</span>
-                        </label>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="SmtpUser" label="Benutzername" required />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="SmtpUser" label="SMTP Benutzername" required />
+                        <input is="emby-input" type="password" id="SmtpPassword" label="Passwort" required />
                     </div>
-                    <div class="inputContainer">
-                        <input is="emby-input" type="password" id="SmtpPassword" label="SMTP Passwort / App-Passwort" />
-                    </div>
-                </section>
-
-                <section class="configSection">
-                    <h2 class="sectionTitle">OAuth2 Support</h2>
                     <div class="checkboxContainer">
                         <label>
-                            <input is="emby-checkbox" type="checkbox" id="UseOAuth2" />
-                            <span>Nutze OAuth2 (für Gmail/Outlook)</span>
+                            <input is="emby-checkbox" type="checkbox" id="UseSsl" />
+                            <span>SSL/TLS nutzen</span>
                         </label>
                     </div>
-                    <div class="inputContainer">
-                        <input is="emby-input" type="text" id="OAuthClientId" label="Client ID" />
-                    </div>
-                    <div class="inputContainer">
-                        <input is="emby-input" type="text" id="OAuthRefreshToken" label="Refresh Token" />
-                    </div>
-                </section>
-
-                <button is="emby-button" type="submit" class="raised button-submit block">Speichern</button>
-            </form>
+                    <button is="emby-button" type="submit" class="raised button-submit block">Speichern</button>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>
