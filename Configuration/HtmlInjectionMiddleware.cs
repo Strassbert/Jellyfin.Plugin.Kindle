@@ -31,6 +31,10 @@ namespace Jellyfin.Plugin.Kindle.Configuration
             using var responseBody = new MemoryStream();
             context.Response.Body = responseBody;
 
+            // Prevent downstream compression so we can read the response as plain text.
+            var originalAcceptEncoding = context.Request.Headers.AcceptEncoding.ToString();
+            context.Request.Headers.Remove("Accept-Encoding");
+
             try
             {
                 await _next(context);
@@ -43,6 +47,10 @@ namespace Jellyfin.Plugin.Kindle.Configuration
                     await responseBody.CopyToAsync(originalBodyStream);
                     return;
                 }
+
+                // Remove encoding headers in case downstream compressed despite our request.
+                context.Response.Headers.Remove("Content-Encoding");
+                context.Response.Headers.Remove("Transfer-Encoding");
 
                 responseBody.Seek(0, SeekOrigin.Begin);
                 var text = await new StreamReader(responseBody, Encoding.UTF8).ReadToEndAsync();
@@ -65,6 +73,12 @@ namespace Jellyfin.Plugin.Kindle.Configuration
             }
             finally
             {
+                // Restore Accept-Encoding for clean logging/diagnostics.
+                if (!string.IsNullOrEmpty(originalAcceptEncoding))
+                {
+                    context.Request.Headers.AcceptEncoding = originalAcceptEncoding;
+                }
+
                 context.Response.Body = originalBodyStream;
             }
         }
