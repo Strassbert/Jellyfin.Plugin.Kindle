@@ -70,5 +70,102 @@
             </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        var PLUGIN_ID = 'E3B2B4A1-1234-4567-89AB-CDEF12345678';
+
+        var i18n = {
+            en: {
+                pageTitle: 'Kindle Share Configuration',
+                smtpSection: 'SMTP Settings',
+                smtpHostDesc: 'The SMTP server of your email provider (e.g. smtp.gmail.com).',
+                senderEmailDesc: 'The sender email address. Leave empty to use the username as sender.',
+                useSsl: 'Use SSL/TLS',
+                oauthSection: 'OAuth2 Settings',
+                useOAuth2: 'Use OAuth2 instead of password authentication',
+                save: 'Save'
+            },
+            de: {
+                pageTitle: 'Kindle Share Konfiguration',
+                smtpSection: 'SMTP Einstellungen',
+                smtpHostDesc: 'Der SMTP-Server deines E-Mail-Anbieters (z.B. smtp.gmail.com).',
+                senderEmailDesc: 'Die Absender-E-Mail-Adresse. Leer lassen, um den Benutzernamen als Absender zu verwenden.',
+                useSsl: 'SSL/TLS nutzen',
+                oauthSection: 'OAuth2 Einstellungen',
+                useOAuth2: 'OAuth2 statt Passwort-Authentifizierung nutzen',
+                save: 'Speichern'
+            }
+        };
+
+        function getLang() {
+            var lang = (navigator.language || 'en').substring(0, 2).toLowerCase();
+            return i18n[lang] ? lang : 'en';
+        }
+
+        var page = document.querySelector('#KindleSettingsPage');
+
+        // i18n
+        (function applyTranslations() {
+            var t = i18n[getLang()];
+            page.querySelector('#pageTitle').textContent = t.pageTitle;
+            page.querySelector('#smtpSectionTitle').textContent = t.smtpSection;
+            page.querySelector('#smtpHostDesc').textContent = t.smtpHostDesc;
+            page.querySelector('#senderEmailDesc').textContent = t.senderEmailDesc;
+            page.querySelector('#useSslLabel').textContent = t.useSsl;
+            page.querySelector('#oauthSectionTitle').textContent = t.oauthSection;
+            page.querySelector('#useOAuth2Label').textContent = t.useOAuth2;
+            page.querySelector('#btnSaveText').textContent = t.save;
+        })();
+
+        // Toggle OAuth2 fields visibility
+        function toggleOAuthFields() {
+            var show = page.querySelector('#UseOAuth2').checked;
+            page.querySelector('#oauthFields').style.display = show ? '' : 'none';
+        }
+
+        page.querySelector('#UseOAuth2').addEventListener('change', toggleOAuthFields);
+
+        // Load config on page show
+        page.addEventListener('viewshow', function () {
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
+                page.querySelector('#SmtpHost').value = config.SmtpHost || '';
+                page.querySelector('#SmtpPort').value = config.SmtpPort || 587;
+                page.querySelector('#SmtpUser').value = config.SmtpUser || '';
+                page.querySelector('#SmtpPassword').value = config.SmtpPassword || '';
+                page.querySelector('#SenderEmail').value = config.SenderEmail || '';
+                page.querySelector('#UseSsl').checked = config.UseSsl;
+                page.querySelector('#UseOAuth2').checked = config.UseOAuth2;
+                page.querySelector('#OAuthClientId').value = config.OAuthClientId || '';
+                page.querySelector('#OAuthClientSecret').value = config.OAuthClientSecret || '';
+                page.querySelector('#OAuthRefreshToken').value = config.OAuthRefreshToken || '';
+                toggleOAuthFields();
+                Dashboard.hideLoadingMsg();
+            });
+        });
+
+        // Save config on form submit
+        page.querySelector('#kindleConfigForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            Dashboard.showLoadingMsg();
+
+            ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
+                config.SmtpHost = page.querySelector('#SmtpHost').value;
+                config.SmtpPort = parseInt(page.querySelector('#SmtpPort').value, 10);
+                config.SmtpUser = page.querySelector('#SmtpUser').value;
+                config.SmtpPassword = page.querySelector('#SmtpPassword').value;
+                config.SenderEmail = page.querySelector('#SenderEmail').value;
+                config.UseSsl = page.querySelector('#UseSsl').checked;
+                config.UseOAuth2 = page.querySelector('#UseOAuth2').checked;
+                config.OAuthClientId = page.querySelector('#OAuthClientId').value;
+                config.OAuthClientSecret = page.querySelector('#OAuthClientSecret').value;
+                config.OAuthRefreshToken = page.querySelector('#OAuthRefreshToken').value;
+
+                ApiClient.updatePluginConfiguration(PLUGIN_ID, config).then(function (result) {
+                    Dashboard.processPluginConfigurationUpdateResult(result);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

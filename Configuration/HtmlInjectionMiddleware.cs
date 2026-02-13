@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,7 +21,6 @@ namespace Jellyfin.Plugin.Kindle.Configuration
 
         public async Task InvokeAsync(HttpContext context)
         {
-            // Only intercept GET requests to the index page
             if (!HttpMethods.IsGet(context.Request.Method) || !IsIndexPageRequest(context.Request.Path))
             {
                 await _next(context);
@@ -35,10 +35,9 @@ namespace Jellyfin.Plugin.Kindle.Configuration
             {
                 await _next(context);
 
-                // Only modify successful HTML responses
                 if (context.Response.StatusCode != 200 ||
                     context.Response.ContentType == null ||
-                    !context.Response.ContentType.Contains("text/html", System.StringComparison.OrdinalIgnoreCase))
+                    !context.Response.ContentType.Contains("text/html", StringComparison.OrdinalIgnoreCase))
                 {
                     responseBody.Seek(0, SeekOrigin.Begin);
                     await responseBody.CopyToAsync(originalBodyStream);
@@ -74,9 +73,10 @@ namespace Jellyfin.Plugin.Kindle.Configuration
         {
             if (!path.HasValue) return false;
             var p = path.Value!;
-            return p.EndsWith("/index.html", System.StringComparison.OrdinalIgnoreCase)
-                || p.Equals("/", System.StringComparison.Ordinal)
-                || p.Equals("/web/", System.StringComparison.OrdinalIgnoreCase);
+            return p.EndsWith("/index.html", StringComparison.OrdinalIgnoreCase)
+                || p.Equals("/", StringComparison.Ordinal)
+                || p.EndsWith("/web/", StringComparison.OrdinalIgnoreCase)
+                || p.EndsWith("/web", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
