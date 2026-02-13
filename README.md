@@ -10,7 +10,7 @@ Ein Plugin für Jellyfin (10.11.X), das es ermöglicht, E-Books direkt aus der W
 
 ## Installation
 1. Gehe im Jellyfin Dashboard zu **Repositories**.
-2. Füge ein neues Repository hinzu: `https://raw.githubusercontent.com/Strassbert/jellyfin-plugin-kindle/main/manifest.json`
+2. Füge ein neues Repository hinzu: `https://raw.githubusercontent.com/Strassbert/Jellyfin.Plugin.Kindle/main/manifest.json`
 3. Wechsle zum **Katalog**, suche nach "Kindle Share" und installiere es.
 4. Starte Jellyfin neu.
 
