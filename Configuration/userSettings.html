@@ -12,7 +12,7 @@
             <h1 id="pageTitle">Kindle Settings</h1>
             <form id="kindleUserForm">
                 <div class="inputContainer">
-                    <input is="emby-input" type="email" id="UserKindleEmail" label="Kindle E-Mail" required />
+                    <input is="emby-input" type="email" id="UserKindleEmail" label="Kindle E-Mail" />
                     <div class="fieldDescription" id="emailDescription">
                         Books will be sent to this address. You can find your Kindle email in your Amazon account settings.
                     </div>
@@ -61,8 +61,8 @@
         page.querySelector('#btnSaveText').textContent = t.save;
     })();
 
-    // Load user email on page show
-    page.addEventListener('pageshow', function () {
+    // Load user email immediately + on page events
+    function loadUserEmail() {
         Dashboard.showLoadingMsg();
         var userId = ApiClient.getCurrentUserId();
 
@@ -76,7 +76,11 @@
         }).catch(function () {
             Dashboard.hideLoadingMsg();
         });
-    });
+    }
+
+    loadUserEmail();
+    page.addEventListener('pageshow', loadUserEmail);
+    page.addEventListener('viewshow', loadUserEmail);
 
     // Save user email on form submit
     page.querySelector('#kindleUserForm').addEventListener('submit', function (e) {
@@ -97,6 +101,8 @@
             Dashboard.hideLoadingMsg();
             Dashboard.alert(t.error);
         });
+
+        return false;
     });
 </script>
 </body>
