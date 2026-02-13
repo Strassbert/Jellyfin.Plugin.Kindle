@@ -13,7 +13,7 @@
         "changelog": "Initial Release für Jellyfin 10.11.X (.NET 9)",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/Strassbert/Jellyfin.Plugin.Kindle/releases/download/v1.0.0.0/Jellyfin.Plugin.Kindle.zip",
-        "checksum": "2C4611FAE8ABB489B474623BC6437D45FE85AEA4EF20BCCDA894161FA1B9DB60",
+        "checksum": "92156793180BDEC09DBE5CE3C20C596B",
         "timestamp": "2025-02-13T12:55:10Z"
       }
     ]
