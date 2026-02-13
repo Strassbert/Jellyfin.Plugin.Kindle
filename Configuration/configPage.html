@@ -1,0 +1,47 @@
+<div id="KindleSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-checkbox,emby-select">
+    <div data-role="content">
+        <div class="content-primary">
+            <form id="kindleConfigForm">
+                <section class="configSection">
+                    <h2 class="sectionTitle">SMTP Server Einstellungen</h2>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host (z.B. smtp.gmail.com)" required />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="number" id="SmtpPort" label="SMTP Port" required />
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="UseSsl" />
+                            <span>SSL/TLS verwenden</span>
+                        </label>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="SmtpUser" label="SMTP Benutzername" required />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="password" id="SmtpPassword" label="SMTP Passwort / App-Passwort" />
+                    </div>
+                </section>
+
+                <section class="configSection">
+                    <h2 class="sectionTitle">OAuth2 Support</h2>
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="UseOAuth2" />
+                            <span>Nutze OAuth2 (für Gmail/Outlook)</span>
+                        </label>
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="OAuthClientId" label="Client ID" />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="text" id="OAuthRefreshToken" label="Refresh Token" />
+                    </div>
+                </section>
+
+                <button is="emby-button" type="submit" class="raised button-submit block">Speichern</button>
+            </form>
+        </div>
+    </div>
+</div>
