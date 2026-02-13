@@ -42,11 +42,14 @@
                 });
             }
 
-            // Load on all possible events: viewshow (SPA first nav), pageshow (reload)
+            // Load on all possible events + immediately
             document.querySelector('#KindleUserSettingsPage')
                 .addEventListener('viewshow', loadKindleUserEmail);
             document.querySelector('#KindleUserSettingsPage')
                 .addEventListener('pageshow', loadKindleUserEmail);
+
+            // Also load immediately - events may have already fired before this script ran
+            loadKindleUserEmail();
 
             document.querySelector('#KindleUserForm')
                 .addEventListener('submit', function (e) {
