@@ -15,19 +15,19 @@
                     <h2 id="smtpSectionTitle" style="margin-top:1em;">SMTP Settings</h2>
 
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host" required />
+                        <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host" />
                         <div class="fieldDescription" id="smtpHostDesc">
                             The SMTP server of your email provider (e.g. smtp.gmail.com).
                         </div>
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="number" id="SmtpPort" label="SMTP Port" required />
+                        <input is="emby-input" type="number" id="SmtpPort" label="SMTP Port" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="SmtpUser" label="Username" required />
+                        <input is="emby-input" type="text" id="SmtpUser" label="Username" />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="password" id="SmtpPassword" label="Password" required />
+                        <input is="emby-input" type="password" id="SmtpPassword" label="Password" />
                     </div>
                     <div class="inputContainer">
                         <input is="emby-input" type="email" id="SenderEmail" label="Sender E-Mail" />
@@ -72,7 +72,7 @@
     </div>
 
     <script type="text/javascript">
-        var PLUGIN_ID = 'E3B2B4A1-1234-4567-89AB-CDEF12345678';
+        var PLUGIN_ID = 'e3b2b4a1-1234-4567-89ab-cdef12345678';
 
         var i18n = {
             en: {
@@ -103,6 +103,7 @@
         }
 
         var page = document.querySelector('#KindleSettingsPage');
+        console.log('[Kindle] Config page script running.');
 
         // i18n
         (function applyTranslations() {
@@ -125,10 +126,12 @@
 
         page.querySelector('#UseOAuth2').addEventListener('change', toggleOAuthFields);
 
-        // Load config on page show
-        page.addEventListener('pageshow', function () {
+        // Load config - called immediately and on page events
+        function loadConfig() {
+            console.log('[Kindle] Loading config...');
             Dashboard.showLoadingMsg();
             ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
+                console.log('[Kindle] Config loaded successfully.');
                 page.querySelector('#SmtpHost').value = config.SmtpHost || '';
                 page.querySelector('#SmtpPort').value = config.SmtpPort || 587;
                 page.querySelector('#SmtpUser').value = config.SmtpUser || '';
@@ -141,17 +144,27 @@
                 page.querySelector('#OAuthRefreshToken').value = config.OAuthRefreshToken || '';
                 toggleOAuthFields();
                 Dashboard.hideLoadingMsg();
+            }).catch(function (err) {
+                console.error('[Kindle] Config load failed:', err);
+                Dashboard.hideLoadingMsg();
             });
-        });
+        }
+
+        // Load immediately (don't depend on any specific event)
+        loadConfig();
+        // Also listen for page events as fallback for re-navigation
+        page.addEventListener('pageshow', loadConfig);
+        page.addEventListener('viewshow', loadConfig);
 
         // Save config on form submit
         page.querySelector('#kindleConfigForm').addEventListener('submit', function (e) {
             e.preventDefault();
+            console.log('[Kindle] Save triggered.');
             Dashboard.showLoadingMsg();
 
             ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
                 config.SmtpHost = page.querySelector('#SmtpHost').value;
-                config.SmtpPort = parseInt(page.querySelector('#SmtpPort').value, 10);
+                config.SmtpPort = parseInt(page.querySelector('#SmtpPort').value, 10) || 587;
                 config.SmtpUser = page.querySelector('#SmtpUser').value;
                 config.SmtpPassword = page.querySelector('#SmtpPassword').value;
                 config.SenderEmail = page.querySelector('#SenderEmail').value;
@@ -161,13 +174,17 @@
                 config.OAuthClientSecret = page.querySelector('#OAuthClientSecret').value;
                 config.OAuthRefreshToken = page.querySelector('#OAuthRefreshToken').value;
 
-                ApiClient.updatePluginConfiguration(PLUGIN_ID, config).then(function (result) {
-                    Dashboard.processPluginConfigurationUpdateResult(result);
-                }).catch(function (err) {
-                    Dashboard.hideLoadingMsg();
-                    console.error('[Kindle] Save failed:', err);
-                });
+                console.log('[Kindle] Sending config to server...');
+                return ApiClient.updatePluginConfiguration(PLUGIN_ID, config);
+            }).then(function (result) {
+                console.log('[Kindle] Config saved successfully.');
+                Dashboard.processPluginConfigurationUpdateResult(result);
+            }).catch(function (err) {
+                console.error('[Kindle] Save failed:', err);
+                Dashboard.hideLoadingMsg();
+                Dashboard.alert('Save failed. Check browser console for details.');
             });
+
             return false;
         });
     </script>
