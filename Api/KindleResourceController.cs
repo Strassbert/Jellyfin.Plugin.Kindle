@@ -1,10 +1,12 @@
 using System.Reflection;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Jellyfin.Plugin.Kindle.Api
 {
     [ApiController]
     [Route("KindlePlugin")]
+    [AllowAnonymous]
     public class KindleResourceController : ControllerBase
     {
         [HttpGet("ClientScript")]

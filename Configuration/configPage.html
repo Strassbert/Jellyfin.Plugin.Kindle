@@ -126,7 +126,7 @@
         page.querySelector('#UseOAuth2').addEventListener('change', toggleOAuthFields);
 
         // Load config on page show
-        page.addEventListener('viewshow', function () {
+        page.addEventListener('pageshow', function () {
             Dashboard.showLoadingMsg();
             ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
                 page.querySelector('#SmtpHost').value = config.SmtpHost || '';
@@ -163,8 +163,12 @@
 
                 ApiClient.updatePluginConfiguration(PLUGIN_ID, config).then(function (result) {
                     Dashboard.processPluginConfigurationUpdateResult(result);
+                }).catch(function (err) {
+                    Dashboard.hideLoadingMsg();
+                    console.error('[Kindle] Save failed:', err);
                 });
             });
+            return false;
         });
     </script>
 </body>

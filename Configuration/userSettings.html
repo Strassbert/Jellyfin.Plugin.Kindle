@@ -62,7 +62,7 @@
     })();
 
     // Load user email on page show
-    page.addEventListener('viewshow', function () {
+    page.addEventListener('pageshow', function () {
         Dashboard.showLoadingMsg();
         var userId = ApiClient.getCurrentUserId();
 

@@ -1,6 +1,8 @@
 (function () {
     'use strict';
 
+    console.log('[Kindle] Script loaded.');
+
     var PLUGIN_ID = 'E3B2B4A1-1234-4567-89AB-CDEF12345678';
 
     // i18n strings
@@ -31,8 +33,8 @@
             cancel: 'Abbrechen',
             emailPlaceholder: 'dein-name@kindle.com',
             emailSaved: 'Kindle-E-Mail gespeichert.',
-            fileTooLarge: 'Datei ist zu groß für Kindle (max. 50 MB).',
-            formatNotSupported: 'Dieses Dateiformat wird vom Kindle nicht unterstützt.',
+            fileTooLarge: 'Datei ist zu gro\u00df f\u00fcr Kindle (max. 50 MB).',
+            formatNotSupported: 'Dieses Dateiformat wird vom Kindle nicht unterst\u00fctzt.',
             settingsLink: 'Kindle Einstellungen'
         }
     };
@@ -56,6 +58,28 @@
         }
     }
 
+    // Parse query parameters from hash-based routing (Jellyfin 10.11 uses #/route?key=val)
+    function getHashParam(name) {
+        var hash = window.location.hash;
+        var qs = hash.indexOf('?') !== -1 ? hash.substring(hash.indexOf('?')) : window.location.search;
+        return new URLSearchParams(qs).get(name);
+    }
+
+    // Wait for a DOM element to appear (React pages render asynchronously)
+    function waitForElement(selector, callback, maxAttempts) {
+        var attempts = 0;
+        var limit = maxAttempts || 20;
+        var interval = setInterval(function () {
+            var el = document.querySelector(selector);
+            if (el) {
+                clearInterval(interval);
+                callback(el);
+            } else if (++attempts >= limit) {
+                clearInterval(interval);
+            }
+        }, 250);
+    }
+
     // Wait for DOM
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initPlugin);
@@ -64,10 +88,11 @@
     }
 
     function initPlugin() {
+        // Book detail page: "Send to Kindle" button (legacy view, viewshow works)
         document.addEventListener('viewshow', function (e) {
-            if (!e.target.classList.contains('itemDetailPage')) return;
+            if (!e.target.classList || !e.target.classList.contains('itemDetailPage')) return;
 
-            var itemId = new URLSearchParams(window.location.search).get('id');
+            var itemId = getHashParam('id');
             if (!itemId) return;
 
             ApiClient.getItem(ApiClient.getCurrentUserId(), itemId).then(function (item) {
@@ -77,21 +102,34 @@
             });
         });
 
-        // Inject Kindle link into user preferences page
-        document.addEventListener('viewshow', function (e) {
-            var page = e.target;
-            if (!page.querySelector || !page.querySelector('.myPreferencesMenuPage, .userProfilePage, .myPreferencesPage')) return;
+        // User preferences page: "Kindle Settings" link (React route, use URL monitoring)
+        function checkPreferencesPage() {
+            var hash = window.location.hash;
+            if (hash.indexOf('/mypreferencesmenu') === -1) return;
+            if (document.querySelector('.kindleSettingsLink')) return;
 
-            var container = page.querySelector('.listItems, .menuLinks, .paperList');
-            if (!container || container.querySelector('.kindleSettingsLink')) return;
+            waitForElement('.listItems, .menuLinks, .paperList, [class*="sectionTitle"]', function () {
+                injectPreferencesLink();
+            });
+        }
+
+        function injectPreferencesLink() {
+            if (document.querySelector('.kindleSettingsLink')) return;
+
+            var container = document.querySelector('.listItems, .menuLinks, .paperList');
+            if (!container) return;
 
             var link = document.createElement('a');
-            link.href = '#!/configurationpage?name=KindleUserSettings';
+            link.href = '#/configurationpage?name=KindleUserSettings';
             link.className = 'kindleSettingsLink listItem-border listItem listItem-button';
             link.innerHTML = '<span class="material-icons listItemIcon listItemIcon-transparent">email</span>' +
                 '<div class="listItemBody"><div class="listItemBodyText">' + t('settingsLink') + '</div></div>';
             container.appendChild(link);
-        });
+            console.log('[Kindle] Settings link injected into preferences.');
+        }
+
+        window.addEventListener('hashchange', checkPreferencesPage);
+        checkPreferencesPage();
     }
 
     function renderButton(item) {
@@ -108,6 +146,7 @@
             sendBook(item, btn);
         });
         container.appendChild(btn);
+        console.log('[Kindle] Send button rendered for:', item.Name);
     }
 
     function sendBook(item, btn) {
