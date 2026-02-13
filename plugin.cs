@@ -18,6 +18,21 @@ namespace Jellyfin.Plugin.Kindle
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
+
+            // --- DEBUGGING ANFANG ---
+    var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+    var resourceNames = assembly.GetManifestResourceNames();
+    
+    System.Console.WriteLine("##################################################");
+    System.Console.WriteLine($"[KINDLE CHECK] Plugin Loaded.");
+    System.Console.WriteLine($"[KINDLE CHECK] DLL GUID: {Id}");
+    System.Console.WriteLine($"[KINDLE CHECK] Gefundene Dateien in der DLL ({resourceNames.Length}):");
+    foreach (var resource in resourceNames)
+    {
+        System.Console.WriteLine($"[KINDLE CHECK] -> {resource}");
+    }
+    System.Console.WriteLine("##################################################");
+    // --- DEBUGGING ENDE ---
         }
 
         public static Plugin Instance { get; private set; } = null!;

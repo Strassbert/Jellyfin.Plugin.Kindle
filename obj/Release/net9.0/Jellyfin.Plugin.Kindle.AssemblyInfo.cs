@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Jellyfin.Plugin.Kindle")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0.0+626dbb3dd85ca79ca1fcdc0792572d8d2de28fc2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0.0+c719e3b9faf2b2acbce87ae2461ad6e546a93971")]
 [assembly: System.Reflection.AssemblyProductAttribute("Jellyfin.Plugin.Kindle")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Jellyfin.Plugin.Kindle")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
