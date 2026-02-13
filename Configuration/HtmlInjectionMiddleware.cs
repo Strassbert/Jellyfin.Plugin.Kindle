@@ -60,7 +60,7 @@ namespace Jellyfin.Plugin.Kindle.Configuration
                     var modifiedText = text.Replace("</body>", $"{ScriptTag}</body>");
                     var modifiedBytes = Encoding.UTF8.GetBytes(modifiedText);
                     context.Response.Body = originalBodyStream;
-                    context.Response.ContentLength = modifiedBytes.Length;
+                    context.Response.ContentLength = null;
                     await originalBodyStream.WriteAsync(modifiedBytes, 0, modifiedBytes.Length);
                     _logger.LogDebug("[Kindle] Injected client script into index page.");
                 }
