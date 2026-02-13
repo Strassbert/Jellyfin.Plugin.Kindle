@@ -12,11 +12,11 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("Jellyfin.Plugin.Kindle")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0.0+22b7a3c032e9dcf23eb2321627f9db3547698f74")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.1.0.0+8c1defb1d3066ebea25c52694dcb8f6822681b93")]
 [assembly: System.Reflection.AssemblyProductAttribute("Jellyfin.Plugin.Kindle")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Jellyfin.Plugin.Kindle")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.1.0.0")]
 
 // Von der MSBuild WriteCodeFragment-Klasse generiert.
 
