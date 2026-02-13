@@ -17,14 +17,7 @@
           "Jellyfin.Plugin.Kindle.dll": {}
         }
       },
-      "BitFaster.Caching/2.5.4": {
-        "runtime": {
-          "lib/net6.0/BitFaster.Caching.dll": {
-            "assemblyVersion": "2.5.4.0",
-            "fileVersion": "2.5.4.0"
-          }
-        }
-      },
+      "BitFaster.Caching/2.5.4": {},
       "BouncyCastle.Cryptography/2.6.1": {
         "runtime": {
           "lib/net6.0/BouncyCastle.Cryptography.dll": {
@@ -33,56 +26,24 @@
           }
         }
       },
-      "Diacritics/4.0.17": {
-        "runtime": {
-          "lib/net9.0/Diacritics.dll": {
-            "assemblyVersion": "4.0.17.0",
-            "fileVersion": "4.0.17.0"
-          }
-        }
-      },
+      "Diacritics/4.0.17": {},
       "ICU4N/60.1.0-alpha.356": {
         "dependencies": {
           "J2N": "2.0.0",
           "Microsoft.Extensions.Caching.Memory": "9.0.11"
-        },
-        "runtime": {
-          "lib/netstandard2.0/ICU4N.dll": {
-            "assemblyVersion": "60.0.0.0",
-            "fileVersion": "60.1.0.0"
-          }
         }
       },
       "ICU4N.Transliterator/60.1.0-alpha.356": {
         "dependencies": {
           "ICU4N": "60.1.0-alpha.356"
-        },
-        "runtime": {
-          "lib/netstandard2.0/ICU4N.Transliterator.dll": {
-            "assemblyVersion": "60.0.0.0",
-            "fileVersion": "60.1.0.0"
-          }
         }
       },
-      "J2N/2.0.0": {
-        "runtime": {
-          "lib/net6.0/J2N.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
-          }
-        }
-      },
+      "J2N/2.0.0": {},
       "Jellyfin.Common/10.11.6": {
         "dependencies": {
           "Jellyfin.Model": "10.11.6",
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.11",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/MediaBrowser.Common.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Controller/10.11.6": {
@@ -95,60 +56,30 @@
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.11",
           "Microsoft.Extensions.Configuration.Binder": "9.0.11",
           "System.Threading.Tasks.Dataflow": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/MediaBrowser.Controller.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Data/10.11.6": {
         "dependencies": {
           "Jellyfin.Database.Implementations": "10.11.6",
           "Microsoft.Extensions.Logging": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Jellyfin.Data.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Database.Implementations/10.11.6": {
         "dependencies": {
           "Microsoft.EntityFrameworkCore.Relational": "9.0.11",
           "Polly": "8.6.5"
-        },
-        "runtime": {
-          "lib/net9.0/Jellyfin.Database.Implementations.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Extensions/10.11.6": {
         "dependencies": {
           "Diacritics": "4.0.17",
           "ICU4N.Transliterator": "60.1.0-alpha.356"
-        },
-        "runtime": {
-          "lib/net9.0/Jellyfin.Extensions.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.MediaEncoding.Keyframes/10.11.6": {
         "dependencies": {
           "Microsoft.Extensions.Logging.Abstractions": "9.0.11",
           "NEbml": "1.1.0.5"
-        },
-        "runtime": {
-          "lib/net9.0/Jellyfin.MediaEncoding.Keyframes.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Model/10.11.6": {
@@ -158,24 +89,12 @@
           "Microsoft.Extensions.Logging.Abstractions": "9.0.11",
           "System.Globalization": "4.3.0",
           "System.Text.Json": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/MediaBrowser.Model.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "Jellyfin.Naming/10.11.6": {
         "dependencies": {
           "Jellyfin.Common": "10.11.6",
           "Jellyfin.Model": "10.11.6"
-        },
-        "runtime": {
-          "lib/net9.0/Emby.Naming.dll": {
-            "assemblyVersion": "10.11.6.0",
-            "fileVersion": "10.11.6.0"
-          }
         }
       },
       "MailKit/4.14.1": {
@@ -196,22 +115,9 @@
           "Microsoft.EntityFrameworkCore.Analyzers": "9.0.11",
           "Microsoft.Extensions.Caching.Memory": "9.0.11",
           "Microsoft.Extensions.Logging": "9.0.11"
-        },
-        "runtime": {
-          "lib/net8.0/Microsoft.EntityFrameworkCore.dll": {
-            "assemblyVersion": "9.0.11.0",
-            "fileVersion": "9.0.1125.51902"
-          }
         }
       },
-      "Microsoft.EntityFrameworkCore.Abstractions/9.0.11": {
-        "runtime": {
-          "lib/net8.0/Microsoft.EntityFrameworkCore.Abstractions.dll": {
-            "assemblyVersion": "9.0.11.0",
-            "fileVersion": "9.0.1125.51902"
-          }
-        }
-      },
+      "Microsoft.EntityFrameworkCore.Abstractions/9.0.11": {},
       "Microsoft.EntityFrameworkCore.Analyzers/9.0.11": {},
       "Microsoft.EntityFrameworkCore.Relational/9.0.11": {
         "dependencies": {
@@ -219,23 +125,11 @@
           "Microsoft.Extensions.Caching.Memory": "9.0.11",
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.11",
           "Microsoft.Extensions.Logging": "9.0.11"
-        },
-        "runtime": {
-          "lib/net8.0/Microsoft.EntityFrameworkCore.Relational.dll": {
-            "assemblyVersion": "9.0.11.0",
-            "fileVersion": "9.0.1125.51902"
-          }
         }
       },
       "Microsoft.Extensions.Caching.Abstractions/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Caching.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.Caching.Memory/9.0.11": {
@@ -245,99 +139,43 @@
           "Microsoft.Extensions.Logging.Abstractions": "9.0.11",
           "Microsoft.Extensions.Options": "9.0.11",
           "Microsoft.Extensions.Primitives": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Caching.Memory.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.Configuration.Abstractions/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.Primitives": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Configuration.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.Configuration.Binder/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Configuration.Binder.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.DependencyInjection/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.DependencyInjection.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
-      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.11": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
-        }
-      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions/9.0.11": {},
       "Microsoft.Extensions.Logging/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "9.0.11",
           "Microsoft.Extensions.Logging.Abstractions": "9.0.11",
           "Microsoft.Extensions.Options": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Logging.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.Logging.Abstractions/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Logging.Abstractions.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
       "Microsoft.Extensions.Options/9.0.11": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.11",
           "Microsoft.Extensions.Primitives": "9.0.11"
-        },
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Options.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
         }
       },
-      "Microsoft.Extensions.Primitives/9.0.11": {
-        "runtime": {
-          "lib/net9.0/Microsoft.Extensions.Primitives.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
-        }
-      },
+      "Microsoft.Extensions.Primitives/9.0.11": {},
       "Microsoft.NETCore.Platforms/1.1.0": {},
       "Microsoft.NETCore.Targets/1.1.0": {},
       "MimeKit/4.14.0": {
@@ -352,33 +190,13 @@
           }
         }
       },
-      "NEbml/1.1.0.5": {
-        "runtime": {
-          "lib/netstandard2.0/NEbml.Core.dll": {
-            "assemblyVersion": "1.1.0.5",
-            "fileVersion": "1.1.0.5"
-          }
-        }
-      },
+      "NEbml/1.1.0.5": {},
       "Polly/8.6.5": {
         "dependencies": {
           "Polly.Core": "8.6.5"
-        },
-        "runtime": {
-          "lib/net6.0/Polly.dll": {
-            "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.6.5.5194"
-          }
         }
       },
-      "Polly.Core/8.6.5": {
-        "runtime": {
-          "lib/net8.0/Polly.Core.dll": {
-            "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.6.5.5194"
-          }
-        }
-      },
+      "Polly.Core/8.6.5": {},
       "System.Formats.Asn1/8.0.1": {},
       "System.Globalization/4.3.0": {
         "dependencies": {
@@ -394,22 +212,8 @@
         }
       },
       "System.Security.Cryptography.Pkcs/8.0.1": {},
-      "System.Text.Json/9.0.11": {
-        "runtime": {
-          "lib/net9.0/System.Text.Json.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
-        }
-      },
-      "System.Threading.Tasks.Dataflow/9.0.11": {
-        "runtime": {
-          "lib/net9.0/System.Threading.Tasks.Dataflow.dll": {
-            "assemblyVersion": "9.0.0.0",
-            "fileVersion": "9.0.1125.51716"
-          }
-        }
-      }
+      "System.Text.Json/9.0.11": {},
+      "System.Threading.Tasks.Dataflow/9.0.11": {}
     }
   },
   "libraries": {
