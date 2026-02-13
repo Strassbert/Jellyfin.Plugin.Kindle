@@ -13,7 +13,7 @@
         "changelog": "Added user settings page, OAuth2 admin UI, i18n (EN/DE), 50MB file size limit, improved UX with toast notifications and inline email dialog, expanded format support (MOBI, AZW3), security improvements with [Authorize] attributes and dedicated user email API endpoints.",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/Strassbert/Jellyfin.Plugin.Kindle/releases/download/1.1.0.0/Jellyfin.Plugin.Kindle.zip",
-        "checksum": "41AA7A3957FC3535318D73AD9B8260F9",
+        "checksum": "C033CCFA1B80604236E93BBEADE28CFA",
         "timestamp": "2026-02-13T21:56:00Z"
       }
 
