@@ -6,6 +6,7 @@ C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.Gen
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.AssemblyInfoInputs.cache
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.AssemblyInfo.cs
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.csproj.CoreCompileInputs.cache
+C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.sourcelink.json
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.dll
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\refint\Jellyfin.Plugin.Kindle.dll
 C:\Projekte\Jellyfin.Plugin.Kindle\obj\Release\net9.0\Jellyfin.Plugin.Kindle.pdb
