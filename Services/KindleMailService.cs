@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
@@ -13,6 +12,7 @@ namespace Jellyfin.Plugin.Kindle.Services
     public class KindleMailService
     {
         private readonly ILogger<KindleMailService> _logger;
+        private static readonly TimeSpan SmtpTimeout = TimeSpan.FromSeconds(30);
 
         public KindleMailService(ILogger<KindleMailService> logger)
         {
@@ -20,62 +20,65 @@ namespace Jellyfin.Plugin.Kindle.Services
         }
 
         public async Task SendBookAsync(
-            string recipientEmail, 
-            string filePath, 
-            string fileName, 
-            PluginConfiguration config)
+            string recipientEmail,
+            string filePath,
+            string fileName,
+            PluginConfiguration config,
+            CancellationToken cancellationToken = default)
         {
+            var senderEmail = string.IsNullOrWhiteSpace(config.SenderEmail) ? config.SmtpUser : config.SenderEmail;
+
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Jellyfin Kindle", config.SmtpUser));
+            message.From.Add(new MailboxAddress("Jellyfin Kindle", senderEmail));
             message.To.Add(new MailboxAddress("Kindle", recipientEmail));
             message.Subject = $"Book: {fileName}";
 
             var bodyBuilder = new BodyBuilder
             {
-                TextBody = "Hier ist dein angefordertes Buch von Jellyfin."
+                TextBody = "Your requested book from Jellyfin."
             };
 
-            // E-Book als Attachment hinzufügen
             bodyBuilder.Attachments.Add(filePath);
             message.Body = bodyBuilder.ToMessageBody();
 
             using var client = new SmtpClient();
+            client.Timeout = (int)SmtpTimeout.TotalMilliseconds;
+
             try
             {
-                // Verbindung herstellen
                 var secureOption = config.UseSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto;
-                await client.ConnectAsync(config.SmtpHost, config.SmtpPort, secureOption);
+                await client.ConnectAsync(config.SmtpHost, config.SmtpPort, secureOption, cancellationToken);
 
-                // Authentifizierung (Normal oder OAuth2)
                 if (config.UseOAuth2)
                 {
-                    await AuthenticateOAuth2(client, config);
+                    await AuthenticateOAuth2Async(client, config, cancellationToken);
                 }
                 else
                 {
-                    await client.AuthenticateAsync(config.SmtpUser, config.SmtpPassword);
+                    await client.AuthenticateAsync(config.SmtpUser, config.SmtpPassword, cancellationToken);
                 }
 
-                await client.SendAsync(message);
-                _logger.LogInformation("Buch erfolgreich an {Email} gesendet.", recipientEmail);
+                await client.SendAsync(message, cancellationToken);
+                _logger.LogInformation("Book '{FileName}' sent to {Email}.", fileName, recipientEmail);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fehler beim Senden der E-Mail an Kindle.");
+                _logger.LogError(ex, "Failed to send email to {Email}.", recipientEmail);
                 throw;
             }
             finally
             {
-                await client.DisconnectAsync(true);
+                if (client.IsConnected)
+                {
+                    await client.DisconnectAsync(true, cancellationToken);
+                }
             }
         }
 
-        private async Task AuthenticateOAuth2(SmtpClient client, PluginConfiguration config)
+        private static async Task AuthenticateOAuth2Async(SmtpClient client, PluginConfiguration config, CancellationToken cancellationToken)
         {
-            // Hinweis für 10.11.X: Wir nutzen hier den SASL XOAUTH2 Mechanismus
-            // In einer vollen Implementierung müsste hier der Refresh-Token-Logik stehen
             var oauth2 = new SaslMechanismOAuth2(config.SmtpUser, config.OAuthRefreshToken);
-            await client.AuthenticateAsync(oauth2);
+            await client.AuthenticateAsync(oauth2, cancellationToken);
         }
     }
 }

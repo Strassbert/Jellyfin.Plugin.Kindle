@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging; // WICHTIG FÜR LOGS
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 using Jellyfin.Plugin.Kindle.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.Kindle
 {
@@ -13,28 +13,16 @@ namespace Jellyfin.Plugin.Kindle
     {
         public override string Name => "Kindle Share";
         public override Guid Id => Guid.Parse("E3B2B4A1-1234-4567-89AB-CDEF12345678");
+        public override string Description => "Send e-books (EPUB, PDF, MOBI) from Jellyfin to your Amazon Kindle.";
 
         private readonly ILogger<Plugin> _logger;
 
-        // Wir lassen uns den Logger injizieren!
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer, ILogger<Plugin> logger)
             : base(applicationPaths, xmlSerializer)
         {
             Instance = this;
             _logger = logger;
-
-            // SOFORT LOGGEN (Try-Catch um sicherzugehen)
-            try 
-            {
-                _logger.LogInformation("##################################################");
-                _logger.LogInformation("[KINDLE] PLUGIN KONSTRUKTOR WIRD AUSGEFÜHRT!");                
-                _logger.LogInformation("##################################################");
-            }
-            catch (Exception ex)
-            {
-                // Falls was schief geht, sehen wir das jetzt
-                _logger.LogError(ex, "[KINDLE] CRITICAL ERROR IM KONSTRUKTOR!");
-            }
+            _logger.LogInformation("[Kindle] Plugin initialized.");
         }
 
         public static Plugin Instance { get; private set; } = null!;
@@ -46,7 +34,6 @@ namespace Jellyfin.Plugin.Kindle
                 new PluginPageInfo
                 {
                     Name = "KindleSettings",
-                    // Dies muss mit dem Log übereinstimmen!
                     EmbeddedResourcePath = "Jellyfin.Plugin.Kindle.Configuration.configPage.html",
                     EnableInMainMenu = true,
                     MenuIcon = "email"
@@ -58,9 +45,14 @@ namespace Jellyfin.Plugin.Kindle
                 },
                 new PluginPageInfo
                 {
-                    Name = "kindleButton.js",
-                    EmbeddedResourcePath = "Jellyfin.Plugin.Kindle.Web.kindleButton.js",
+                    Name = "KindleUserSettings",
+                    EmbeddedResourcePath = "Jellyfin.Plugin.Kindle.Configuration.userSettings.html",
                     EnableInMainMenu = false
+                },
+                new PluginPageInfo
+                {
+                    Name = "KindleUserSettingsJs",
+                    EmbeddedResourcePath = "Jellyfin.Plugin.Kindle.Configuration.userSettings.js"
                 }
             };
         }
