@@ -1,109 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
     <title>Kindle User Settings</title>
 </head>
 <body>
-
-<div id="KindleUserSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage"
-     data-require="emby-button,emby-input">
-    <div data-role="content">
-        <div class="content-primary">
-            <h1 id="pageTitle">Kindle Settings</h1>
-            <form id="kindleUserForm">
-                <div class="inputContainer">
-                    <input is="emby-input" type="email" id="UserKindleEmail" label="Kindle E-Mail" />
-                    <div class="fieldDescription" id="emailDescription">
-                        Books will be sent to this address. You can find your Kindle email in your Amazon account settings.
+    <div id="KindleUserSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage"
+         data-require="emby-button,emby-input">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="KindleUserForm">
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="UserKindleEmail">Kindle E-Mail</label>
+                        <input id="UserKindleEmail" name="UserKindleEmail" type="email" is="emby-input" />
+                        <div class="fieldDescription">
+                            Books will be sent to this address. You can find your Kindle email in your Amazon account settings.
+                        </div>
                     </div>
-                </div>
-                <button is="emby-button" type="submit" class="raised button-submit block" id="btnSave">
-                    <span id="btnSaveText">Save</span>
-                </button>
-            </form>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+        <script type="text/javascript">
+            document.querySelector('#KindleUserSettingsPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    var userId = ApiClient.getCurrentUserId();
+
+                    ApiClient.ajax({
+                        type: 'GET',
+                        url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
+                        dataType: 'json'
+                    }).then(function (result) {
+                        document.querySelector('#UserKindleEmail').value = result.email || '';
+                        Dashboard.hideLoadingMsg();
+                    }).catch(function () {
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#KindleUserForm')
+                .addEventListener('submit', function (e) {
+                    Dashboard.showLoadingMsg();
+                    var userId = ApiClient.getCurrentUserId();
+                    var email = document.querySelector('#UserKindleEmail').value.trim();
+
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId, email: email })
+                    }).then(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Kindle email saved.');
+                    }).catch(function () {
+                        Dashboard.hideLoadingMsg();
+                        Dashboard.alert('Failed to save Kindle email.');
+                    });
+
+                    e.preventDefault();
+                    return false;
+                });
+        </script>
     </div>
-</div>
-
-<script type="text/javascript">
-    var i18n = {
-        en: {
-            title: 'Kindle Settings',
-            emailLabel: 'Kindle E-Mail',
-            emailDescription: 'Books will be sent to this address. You can find your Kindle email in your Amazon account settings.',
-            save: 'Save',
-            saved: 'Kindle email saved.',
-            error: 'Failed to save Kindle email.'
-        },
-        de: {
-            title: 'Kindle Einstellungen',
-            emailLabel: 'Kindle E-Mail-Adresse',
-            emailDescription: 'B\u00FCcher werden an diese Adresse gesendet. Du findest deine Kindle-E-Mail in deinen Amazon-Kontoeinstellungen.',
-            save: 'Speichern',
-            saved: 'Kindle-E-Mail gespeichert.',
-            error: 'Kindle-E-Mail konnte nicht gespeichert werden.'
-        }
-    };
-
-    function getLang() {
-        var lang = (navigator.language || 'en').substring(0, 2).toLowerCase();
-        return i18n[lang] ? lang : 'en';
-    }
-
-    var page = document.querySelector('#KindleUserSettingsPage');
-
-    // i18n
-    (function applyTranslations() {
-        var t = i18n[getLang()];
-        page.querySelector('#pageTitle').textContent = t.title;
-        page.querySelector('#UserKindleEmail').setAttribute('label', t.emailLabel);
-        page.querySelector('#emailDescription').textContent = t.emailDescription;
-        page.querySelector('#btnSaveText').textContent = t.save;
-    })();
-
-    // Load user email immediately + on page events
-    function loadUserEmail() {
-        Dashboard.showLoadingMsg();
-        var userId = ApiClient.getCurrentUserId();
-
-        ApiClient.ajax({
-            type: 'GET',
-            url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
-            dataType: 'json'
-        }).then(function (result) {
-            page.querySelector('#UserKindleEmail').value = result.email || '';
-            Dashboard.hideLoadingMsg();
-        }).catch(function () {
-            Dashboard.hideLoadingMsg();
-        });
-    }
-
-    loadUserEmail();
-    page.addEventListener('pageshow', loadUserEmail);
-    page.addEventListener('viewshow', loadUserEmail);
-
-    // Save user email on form submit
-    page.querySelector('#kindleUserForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        Dashboard.showLoadingMsg();
-
-        var userId = ApiClient.getCurrentUserId();
-        var email = page.querySelector('#UserKindleEmail').value.trim();
-        var t = i18n[getLang()];
-
-        ApiClient.ajax({
-            type: 'POST',
-            url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId, email: email })
-        }).then(function () {
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert(t.saved);
-        }).catch(function () {
-            Dashboard.hideLoadingMsg();
-            Dashboard.alert(t.error);
-        });
-
-        return false;
-    });
-</script>
 </body>
 </html>
