@@ -102,50 +102,54 @@
             });
         });
 
-        // User preferences page: "Kindle Settings" link (React route, use URL monitoring)
+        // User preferences page: "Kindle Settings" link
+        // Pattern based on Jellyfin Enhanced (jellyfinEnhancedUserPrefsLink)
+        function addPreferencesLink() {
+            var menuContainer = document.querySelector('#myPreferencesMenuPage:not(.hide) .verticalSection');
+            if (!menuContainer) return false;
+
+            // Check if link already exists
+            if (document.querySelector('#kindleUserPrefsLink')) return true;
+
+            // Create the link element matching Jellyfin's structure
+            var link = document.createElement('a');
+            link.id = 'kindleUserPrefsLink';
+            link.setAttribute('is', 'emby-linkbutton');
+            link.setAttribute('data-ripple', 'false');
+            link.href = '#/configurationpage?name=KindleUserSettings';
+            link.className = 'listItem-border emby-button';
+            link.style.display = 'block';
+            link.style.padding = '0';
+            link.style.margin = '0';
+
+            link.innerHTML =
+                '<div class="listItem">' +
+                '<span class="material-icons listItemIcon listItemIcon-transparent email" aria-hidden="true"></span>' +
+                '<div class="listItemBody">' +
+                '<div class="listItemBodyText">' + t('settingsLink') + '</div>' +
+                '</div>' +
+                '</div>';
+
+            menuContainer.appendChild(link);
+            console.log('[Kindle] Settings link injected into preferences.');
+            return true;
+        }
+
         function checkPreferencesPage() {
             var hash = window.location.hash;
             if (hash.indexOf('/mypreferencesmenu') === -1) return;
-            if (document.querySelector('.kindleSettingsLink')) return;
 
-            console.log('[Kindle] Preferences page detected, waiting for content...');
-            waitForElement('[data-role="content"], .content-primary, .skinBody, main, [class*="page"]', function () {
-                injectPreferencesLink();
+            // Try to add immediately
+            if (addPreferencesLink()) return;
+
+            // If not found, observe for when the menu is loaded and visible
+            var observer = new MutationObserver(function () {
+                if (addPreferencesLink()) {
+                    observer.disconnect();
+                }
             });
-        }
 
-        function injectPreferencesLink() {
-            if (document.querySelector('.kindleSettingsLink')) return;
-
-            // Try multiple possible container selectors for different Jellyfin versions
-            var selectors = [
-                '.listItems',
-                '.menuLinks',
-                '.paperList',
-                '[data-role="content"] .content-primary',
-                '[data-role="content"]',
-                '.skinBody',
-                'main'
-            ];
-            var container = null;
-            for (var i = 0; i < selectors.length; i++) {
-                container = document.querySelector(selectors[i]);
-                if (container) break;
-            }
-
-            if (!container) {
-                console.log('[Kindle] No container found for settings link.');
-                return;
-            }
-
-            var link = document.createElement('a');
-            link.href = '#/configurationpage?name=KindleUserSettings';
-            link.className = 'kindleSettingsLink listItem-border listItem listItem-button';
-            link.style.cssText = 'display:flex;align-items:center;padding:0.5em 1em;text-decoration:none;color:inherit;';
-            link.innerHTML = '<span class="material-icons listItemIcon listItemIcon-transparent" style="margin-right:1em;">email</span>' +
-                '<div class="listItemBody"><div class="listItemBodyText">' + t('settingsLink') + '</div></div>';
-            container.appendChild(link);
-            console.log('[Kindle] Settings link injected into preferences.');
+            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
         }
 
         window.addEventListener('hashchange', checkPreferencesPage);
