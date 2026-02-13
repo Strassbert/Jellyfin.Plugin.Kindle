@@ -4,31 +4,68 @@
     <title>Kindle Share</title>
 </head>
 <body>
-    <div id="KindleSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-button,emby-input,emby-checkbox,emby-select">
+    <div id="KindleSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage"
+         data-require="emby-button,emby-input,emby-checkbox,emby-select">
         <div data-role="content">
             <div class="content-primary">
-                <h1>Kindle Share Konfiguration</h1>
+                <h1 id="pageTitle">Kindle Share Configuration</h1>
+
                 <form id="kindleConfigForm">
+                    <!-- SMTP Settings -->
+                    <h2 id="smtpSectionTitle" style="margin-top:1em;">SMTP Settings</h2>
+
                     <div class="inputContainer">
                         <input is="emby-input" type="text" id="SmtpHost" label="SMTP Host" required />
-                        <div class="fieldDescription">Der SMTP Server deines E-Mail Anbieters.</div>
+                        <div class="fieldDescription" id="smtpHostDesc">
+                            The SMTP server of your email provider (e.g. smtp.gmail.com).
+                        </div>
                     </div>
                     <div class="inputContainer">
                         <input is="emby-input" type="number" id="SmtpPort" label="SMTP Port" required />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="text" id="SmtpUser" label="Benutzername" required />
+                        <input is="emby-input" type="text" id="SmtpUser" label="Username" required />
                     </div>
                     <div class="inputContainer">
-                        <input is="emby-input" type="password" id="SmtpPassword" label="Passwort" required />
+                        <input is="emby-input" type="password" id="SmtpPassword" label="Password" required />
+                    </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" type="email" id="SenderEmail" label="Sender E-Mail" />
+                        <div class="fieldDescription" id="senderEmailDesc">
+                            The sender email address. Leave empty to use the username as sender.
+                        </div>
                     </div>
                     <div class="checkboxContainer">
                         <label>
                             <input is="emby-checkbox" type="checkbox" id="UseSsl" />
-                            <span>SSL/TLS nutzen</span>
+                            <span id="useSslLabel">Use SSL/TLS</span>
                         </label>
                     </div>
-                    <button is="emby-button" type="submit" class="raised button-submit block">Speichern</button>
+
+                    <!-- OAuth2 Settings -->
+                    <h2 id="oauthSectionTitle" style="margin-top:2em;">OAuth2 Settings</h2>
+
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="UseOAuth2" />
+                            <span id="useOAuth2Label">Use OAuth2 instead of password authentication</span>
+                        </label>
+                    </div>
+                    <div id="oauthFields" style="display:none;">
+                        <div class="inputContainer">
+                            <input is="emby-input" type="text" id="OAuthClientId" label="OAuth2 Client ID" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="password" id="OAuthClientSecret" label="OAuth2 Client Secret" />
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" type="password" id="OAuthRefreshToken" label="OAuth2 Refresh Token" />
+                        </div>
+                    </div>
+
+                    <button is="emby-button" type="submit" class="raised button-submit block" style="margin-top:2em;">
+                        <span id="btnSaveText">Save</span>
+                    </button>
                 </form>
             </div>
         </div>

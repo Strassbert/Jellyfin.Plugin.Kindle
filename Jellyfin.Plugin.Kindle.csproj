@@ -7,7 +7,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Jellyfin.Plugin.Kindle</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.Kindle</RootNamespace>
-    <Version>1.0.0.0</Version>
+    <Version>1.1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
