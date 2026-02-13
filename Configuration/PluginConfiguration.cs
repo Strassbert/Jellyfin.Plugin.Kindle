@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Xml.Serialization;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.Kindle.Configuration
@@ -19,8 +21,14 @@ namespace Jellyfin.Plugin.Kindle.Configuration
         public string OAuthClientSecret { get; set; } = string.Empty;
         public string OAuthRefreshToken { get; set; } = string.Empty;
 
-        // Per-user Kindle email addresses
-        // Key: UserId (string), Value: Kindle email address
-        public Dictionary<string, string> UserKindleEmails { get; set; } = new();
+        // Per-user Kindle email addresses stored as JSON string (XmlSerializer cannot handle Dictionary)
+        public string UserKindleEmailsJson { get; set; } = "{}";
+
+        [XmlIgnore]
+        public Dictionary<string, string> UserKindleEmails
+        {
+            get => JsonSerializer.Deserialize<Dictionary<string, string>>(UserKindleEmailsJson ?? "{}") ?? new();
+            set => UserKindleEmailsJson = JsonSerializer.Serialize(value);
+        }
     }
 }

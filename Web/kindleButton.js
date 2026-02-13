@@ -108,7 +108,8 @@
             if (hash.indexOf('/mypreferencesmenu') === -1) return;
             if (document.querySelector('.kindleSettingsLink')) return;
 
-            waitForElement('.listItems, .menuLinks, .paperList, [class*="sectionTitle"]', function () {
+            console.log('[Kindle] Preferences page detected, waiting for content...');
+            waitForElement('[data-role="content"], .content-primary, .skinBody, main, [class*="page"]', function () {
                 injectPreferencesLink();
             });
         }
@@ -116,13 +117,32 @@
         function injectPreferencesLink() {
             if (document.querySelector('.kindleSettingsLink')) return;
 
-            var container = document.querySelector('.listItems, .menuLinks, .paperList');
-            if (!container) return;
+            // Try multiple possible container selectors for different Jellyfin versions
+            var selectors = [
+                '.listItems',
+                '.menuLinks',
+                '.paperList',
+                '[data-role="content"] .content-primary',
+                '[data-role="content"]',
+                '.skinBody',
+                'main'
+            ];
+            var container = null;
+            for (var i = 0; i < selectors.length; i++) {
+                container = document.querySelector(selectors[i]);
+                if (container) break;
+            }
+
+            if (!container) {
+                console.log('[Kindle] No container found for settings link.');
+                return;
+            }
 
             var link = document.createElement('a');
             link.href = '#/configurationpage?name=KindleUserSettings';
             link.className = 'kindleSettingsLink listItem-border listItem listItem-button';
-            link.innerHTML = '<span class="material-icons listItemIcon listItemIcon-transparent">email</span>' +
+            link.style.cssText = 'display:flex;align-items:center;padding:0.5em 1em;text-decoration:none;color:inherit;';
+            link.innerHTML = '<span class="material-icons listItemIcon listItemIcon-transparent" style="margin-right:1em;">email</span>' +
                 '<div class="listItemBody"><div class="listItemBodyText">' + t('settingsLink') + '</div></div>';
             container.appendChild(link);
             console.log('[Kindle] Settings link injected into preferences.');

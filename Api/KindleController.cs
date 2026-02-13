@@ -123,7 +123,9 @@ namespace Jellyfin.Plugin.Kindle.Api
             }
 
             var config = Plugin.Instance.Configuration;
-            config.UserKindleEmails[userId] = email.Trim();
+            var emails = config.UserKindleEmails;
+            emails[userId] = email.Trim();
+            config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
             _logger.LogInformation("Kindle email updated for user {UserId}.", userId);
@@ -134,7 +136,9 @@ namespace Jellyfin.Plugin.Kindle.Api
         public IActionResult DeleteUserEmail([FromQuery, Required] string userId)
         {
             var config = Plugin.Instance.Configuration;
-            config.UserKindleEmails.Remove(userId);
+            var emails = config.UserKindleEmails;
+            emails.Remove(userId);
+            config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
             _logger.LogInformation("Kindle email removed for user {UserId}.", userId);
