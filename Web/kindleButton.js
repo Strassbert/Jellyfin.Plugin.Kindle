@@ -160,9 +160,21 @@
         var container = document.querySelector('.mainDetailButtons');
         if (!container || container.querySelector('.btnSendToKindle')) return;
 
+        // Find an existing detail button to clone its styling
+        var existingBtn = container.querySelector('.detailButton');
+
         var btn = document.createElement('button');
         btn.type = 'button';
+        btn.setAttribute('is', 'emby-button');
         btn.className = 'btnSendToKindle detailButton emby-button';
+
+        // Copy computed styles from existing buttons for consistent appearance
+        if (existingBtn) {
+            var cs = window.getComputedStyle(existingBtn);
+            btn.style.color = cs.color;
+            btn.style.background = cs.background;
+        }
+
         btn.innerHTML = '<span class="material-icons detailButton-icon">send</span>' +
             '<div class="detailButton-content"><div class="detailButton-content-text">' +
             t('sendToKindle') + '</div></div>';
