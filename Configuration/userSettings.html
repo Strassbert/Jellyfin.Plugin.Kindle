@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Kindle User Settings</title>
+    <title>E-Book User Settings</title>
 </head>
 <body>
     <div id="KindleUserSettingsPage" data-role="page" class="page type-interior pluginConfigurationPage"
@@ -11,10 +11,10 @@
             <div class="content-primary">
                 <form id="KindleUserForm">
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="UserKindleEmail">Kindle E-Mail</label>
+                        <label class="inputLabel inputLabelUnfocused" for="UserKindleEmail">E-Book E-Mail</label>
                         <input id="UserKindleEmail" name="UserKindleEmail" type="email" is="emby-input" />
                         <div class="fieldDescription">
-                            Books will be sent to this address. You can find your Kindle email in your Amazon account settings.
+                            Books will be sent to this address.
                         </div>
                     </div>
                     <div>
@@ -22,6 +22,25 @@
                             <span>Save</span>
                         </button>
                     </div>
+                    <details>
+                        <summary style="cursor: pointer; font-weight: bold; list-style: none;">
+                        &#709; Beispiel Kindle
+                        </summary>
+                            <p style="margin-top: 10px; padding-left: 15px;">
+                                Um deine für Send to Kindle verwendete E-Mail-Adresse zu finden, wähle 
+                                    <a href="https://www.amazon.de/hz/mycd/digital-console/contentlist/pdocs/dateDsc" target="_blank">
+                                        Meine Inhalte und Geräte verwalten
+                                    </a> 
+                                &gt; Einstellungen &gt; Persönliche Dokumente Einstellungen.
+                            </p>
+                            <p style="margin-top: 10px; padding-left: 15px;">
+                                Nur genehmigte E-Mail-Adressen können Dateien an deine Kindle-Bibliothek senden. Vergewissere dich vor dem Senden, dass das Konto, das du verwenden wirst, in deiner
+                                    <a href="https://www.amazon.de/hz/mycd/preferences/myx#/home/settings/payment" target="_blank">
+                                        E-Mail-Liste für genehmigte persönliche Dokumente
+                                    </a> 
+                                in deinen Einstellungen für persönliche Dokumente aufgeführt ist.
+                            </p>
+                    </details>
                 </form>
             </div>
         </div>
@@ -62,10 +81,10 @@
                         url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId, email: email })
                     }).then(function () {
                         Dashboard.hideLoadingMsg();
-                        Dashboard.alert('Kindle email saved.');
+                        Dashboard.alert('E-Book email saved.');
                     }).catch(function () {
                         Dashboard.hideLoadingMsg();
-                        Dashboard.alert('Failed to save Kindle email.');
+                        Dashboard.alert('Failed to save E-Book email.');
                     });
 
                     e.preventDefault();
