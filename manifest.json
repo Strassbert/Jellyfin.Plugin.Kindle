@@ -1,13 +1,21 @@
 [
   {
     "guid": "E3B2B4A1-1234-4567-89AB-CDEF12345678",
-    "name": "Kindle Share",
-    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) directly from the detail page to an Amazon Kindle via email.",
-    "overview": "Adds a 'Send to Kindle' button on book detail pages. Supports per-user Kindle email addresses, SMTP and OAuth2 authentication, and i18n (English/German).",
+    "name": "E-Book Share",
+    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) directly from the detail page to an E-Book via email.",
+    "overview": "Adds a 'Send to E-Book Reader' button on book detail pages. Supports per-user E-Book email addresses, SMTP and OAuth2 authentication, and i18n (English/German).",
     "owner": "Strassbert",
     "category": "Email",
     "imageUrl": "https://raw.githubusercontent.com/Strassbert/Jellyfin.Plugin.Kindle/main/thumb.png",
     "versions": [
+      {
+        "version": "1.2.0.0",
+        "changelog": "Updated Names and Example for User",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/Strassbert/Jellyfin.Plugin.Kindle/releases/download/1.2.0.0/Jellyfin.Plugin.Kindle.zip",
+        "checksum": "DDD9D51DA2DC3B70255741E2F9AEAEC7",
+        "timestamp": "2026-02-14T12:31:00Z"
+      },
       {
         "version": "1.1.0.0",
         "changelog": "Initial Release",

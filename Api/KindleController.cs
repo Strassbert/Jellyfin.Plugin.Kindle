@@ -48,8 +48,8 @@ namespace Jellyfin.Plugin.Kindle.Api
             {
                 return BadRequest(new
                 {
-                    error = $"Format '{extension}' is not supported by Kindle.",
-                    errorDe = $"Format '{extension}' wird vom Kindle nicht unterstützt."
+                    error = $"Format '{extension}' is not supported by E-Book Reader.",
+                    errorDe = $"Format '{extension}' wird vom E-Book Reader nicht unterstützt."
                 });
             }
 
@@ -66,8 +66,8 @@ namespace Jellyfin.Plugin.Kindle.Api
                 var sizeMb = fileInfo.Length / (1024.0 * 1024.0);
                 return BadRequest(new
                 {
-                    error = $"File is too large ({sizeMb:F1} MB). Amazon Kindle limit is 50 MB.",
-                    errorDe = $"Datei ist zu groß ({sizeMb:F1} MB). Amazon Kindle Limit ist 50 MB."
+                    error = $"File is too large ({sizeMb:F1} MB). E-Book Reader limit is 50 MB.",
+                    errorDe = $"Datei ist zu groß ({sizeMb:F1} MB). E-Book Reader Limit ist 50 MB."
                 });
             }
 
@@ -77,8 +77,8 @@ namespace Jellyfin.Plugin.Kindle.Api
             {
                 return BadRequest(new
                 {
-                    error = "No Kindle email configured. Please set your Kindle email in user settings.",
-                    errorDe = "Keine Kindle-E-Mail hinterlegt. Bitte in den Benutzereinstellungen konfigurieren.",
+                    error = "No E-Book Reader email configured. Please set your E-Book Reader email in user settings.",
+                    errorDe = "Keine E-Book Reader E-Mail hinterlegt. Bitte in den Benutzereinstellungen konfigurieren.",
                     code = "NO_KINDLE_EMAIL"
                 });
             }
@@ -87,11 +87,11 @@ namespace Jellyfin.Plugin.Kindle.Api
             {
                 await _mailService.SendBookAsync(kindleEmail, item.Path, item.Name + extension, config);
                 _logger.LogInformation("Book '{Name}' sent to {Email} for user {UserId}.", item.Name, kindleEmail, userId);
-                return Ok(new { message = "Sent to Kindle.", messageDe = "An Kindle gesendet." });
+                return Ok(new { message = "Sent to E-Book Reader.", messageDe = "An E-Book Reader gesendet." });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send book '{Name}' to Kindle for user {UserId}.", item.Name, userId);
+                _logger.LogError(ex, "Failed to send book '{Name}' to E-Book Reader for user {UserId}.", item.Name, userId);
                 return StatusCode(500, new
                 {
                     error = "Failed to send email. Please check SMTP settings.",
@@ -128,8 +128,8 @@ namespace Jellyfin.Plugin.Kindle.Api
             config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
-            _logger.LogInformation("Kindle email updated for user {UserId}.", userId);
-            return Ok(new { message = "Kindle email saved.", messageDe = "Kindle-E-Mail gespeichert." });
+            _logger.LogInformation("E-Book Reader email updated for user {UserId}.", userId);
+            return Ok(new { message = "E-Book Reader email saved.", messageDe = "E-Book Reader-E-Mail gespeichert." });
         }
 
         [HttpDelete("UserEmail")]
@@ -141,8 +141,8 @@ namespace Jellyfin.Plugin.Kindle.Api
             config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
-            _logger.LogInformation("Kindle email removed for user {UserId}.", userId);
-            return Ok(new { message = "Kindle email removed.", messageDe = "Kindle-E-Mail entfernt." });
+            _logger.LogInformation("E-Book Reader email removed for user {UserId}.", userId);
+            return Ok(new { message = "E-Book Reader email removed.", messageDe = "E-Book Reader E-Mail entfernt." });
         }
     }
 }

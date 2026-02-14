@@ -8,34 +8,34 @@
     // i18n strings
     var i18n = {
         en: {
-            sendToKindle: 'Send to Kindle',
+            sendToKindle: 'Send to E-Book Reader',
             sending: 'Sending...',
-            sent: 'Sent to Kindle!',
-            errorSending: 'Failed to send to Kindle.',
-            noEmail: 'No Kindle email configured.',
-            enterEmail: 'Enter your Kindle email address:',
+            sent: 'Sent to E-Book Reader!',
+            errorSending: 'Failed to send to E-Book Reader.',
+            noEmail: 'No E-Book Reader email configured.',
+            enterEmail: 'Enter your E-Book Reader email address:',
             save: 'Save',
             cancel: 'Cancel',
             emailPlaceholder: 'your-name@kindle.com',
-            emailSaved: 'Kindle email saved.',
-            fileTooLarge: 'File is too large for Kindle (max 50 MB).',
-            formatNotSupported: 'This file format is not supported by Kindle.',
-            settingsLink: 'Kindle Settings'
+            emailSaved: 'E-Book Reader Email saved.',
+            fileTooLarge: 'File is too large for E-Book Reader (max 50 MB).',
+            formatNotSupported: 'This file format is not supported by E-Book Reader.',
+            settingsLink: 'E-Book Reader Settings'
         },
         de: {
-            sendToKindle: 'An Kindle senden',
+            sendToKindle: 'An E-Book Reader senden',
             sending: 'Wird gesendet...',
-            sent: 'An Kindle gesendet!',
-            errorSending: 'Senden an Kindle fehlgeschlagen.',
-            noEmail: 'Keine Kindle-E-Mail konfiguriert.',
-            enterEmail: 'Gib deine Kindle-E-Mail-Adresse ein:',
+            sent: 'An E-Book Reader gesendet!',
+            errorSending: 'Senden an E-Book Reader fehlgeschlagen.',
+            noEmail: 'Keine E-Book Reader E-Mail konfiguriert.',
+            enterEmail: 'Gib deine E-Book ReaderE-Mail-Adresse ein:',
             save: 'Speichern',
             cancel: 'Abbrechen',
             emailPlaceholder: 'dein-name@kindle.com',
-            emailSaved: 'Kindle-E-Mail gespeichert.',
-            fileTooLarge: 'Datei ist zu gro\u00df f\u00fcr Kindle (max. 50 MB).',
-            formatNotSupported: 'Dieses Dateiformat wird vom Kindle nicht unterst\u00fctzt.',
-            settingsLink: 'Kindle Einstellungen'
+            emailSaved: 'E-Book Reader E-Mail gespeichert.',
+            fileTooLarge: 'Datei ist zu gro\u00df f\u00fcr E-Book Reader (max. 50 MB).',
+            formatNotSupported: 'Dieses Dateiformat wird vom E-Book Reader nicht unterst\u00fctzt.',
+            settingsLink: 'E-Book Reader Einstellungen'
         }
     };
 
@@ -88,7 +88,7 @@
     }
 
     function initPlugin() {
-        // Book detail page: "Send to Kindle" button (legacy view, viewshow works)
+        // Book detail page: "Send to E-Book Reader" button (legacy view, viewshow works)
         document.addEventListener('viewshow', function (e) {
             if (!e.target.classList || !e.target.classList.contains('itemDetailPage')) return;
 
@@ -102,7 +102,7 @@
             });
         });
 
-        // User preferences page: "Kindle Settings" link
+        // User preferences page: "E-Book Reader Settings" link
         // Pattern based on Jellyfin Enhanced (jellyfinEnhancedUserPrefsLink)
         function addPreferencesLink() {
             var menuContainer = document.querySelector('#myPreferencesMenuPage:not(.hide) .verticalSection');

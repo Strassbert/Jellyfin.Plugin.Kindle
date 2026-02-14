@@ -5,7 +5,7 @@ define(['loading', 'elementQuery', 'emby-button', 'emby-input', 'emby-checkbox',
 
     var i18n = {
         en: {
-            pageTitle: 'Kindle Share Configuration',
+            pageTitle: 'E-Book Share Configuration',
             smtpSection: 'SMTP Settings',
             smtpHostDesc: 'The SMTP server of your email provider (e.g. smtp.gmail.com).',
             senderEmailDesc: 'The sender email address. Leave empty to use the username as sender.',
@@ -15,7 +15,7 @@ define(['loading', 'elementQuery', 'emby-button', 'emby-input', 'emby-checkbox',
             save: 'Save'
         },
         de: {
-            pageTitle: 'Kindle Share Konfiguration',
+            pageTitle: 'E-Book Share Konfiguration',
             smtpSection: 'SMTP Einstellungen',
             smtpHostDesc: 'Der SMTP-Server deines E-Mail-Anbieters (z.B. smtp.gmail.com).',
             senderEmailDesc: 'Die Absender-E-Mail-Adresse. Leer lassen, um den Benutzernamen als Absender zu verwenden.',
