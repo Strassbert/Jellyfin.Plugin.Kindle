@@ -135,24 +135,36 @@
             return true;
         }
 
+        var prefsCheckInterval = null;
+
         function checkPreferencesPage() {
             var hash = window.location.hash;
-            if (hash.indexOf('/mypreferencesmenu') === -1) return;
+            if (hash.indexOf('/mypreferencesmenu') === -1) {
+                // Not on preferences page - stop polling if active
+                if (prefsCheckInterval) {
+                    clearInterval(prefsCheckInterval);
+                    prefsCheckInterval = null;
+                }
+                return;
+            }
 
             // Try to add immediately
             if (addPreferencesLink()) return;
 
-            // If not found, observe for when the menu is loaded and visible
-            var observer = new MutationObserver(function () {
-                if (addPreferencesLink()) {
-                    observer.disconnect();
+            // Poll until the container appears (React render may take a few frames)
+            if (prefsCheckInterval) clearInterval(prefsCheckInterval);
+            var attempts = 0;
+            prefsCheckInterval = setInterval(function () {
+                if (addPreferencesLink() || ++attempts >= 40) {
+                    clearInterval(prefsCheckInterval);
+                    prefsCheckInterval = null;
                 }
-            });
-
-            observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+            }, 250);
         }
 
         window.addEventListener('hashchange', checkPreferencesPage);
+        // Also listen for viewshow (Jellyfin's SPA view event)
+        document.addEventListener('viewshow', checkPreferencesPage);
         checkPreferencesPage();
     }
 
