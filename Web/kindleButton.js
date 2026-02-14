@@ -140,7 +140,7 @@
         function checkPreferencesPage() {
             var hash = window.location.hash;
             if (hash.indexOf('/mypreferencesmenu') === -1) {
-                // Not on preferences page - stop polling if active
+                // Not on preferences page - stop polling
                 if (prefsCheckInterval) {
                     clearInterval(prefsCheckInterval);
                     prefsCheckInterval = null;
@@ -149,17 +149,21 @@
             }
 
             // Try to add immediately
-            if (addPreferencesLink()) return;
+            addPreferencesLink();
 
-            // Poll until the container appears (React render may take a few frames)
-            if (prefsCheckInterval) clearInterval(prefsCheckInterval);
-            var attempts = 0;
-            prefsCheckInterval = setInterval(function () {
-                if (addPreferencesLink() || ++attempts >= 40) {
-                    clearInterval(prefsCheckInterval);
-                    prefsCheckInterval = null;
-                }
-            }, 250);
+            // Keep polling while on preferences page.
+            // Other plugins (e.g. Jellyfin Enhanced) can trigger React re-renders
+            // that discard our manually appended link. Continuous polling re-injects it.
+            if (!prefsCheckInterval) {
+                prefsCheckInterval = setInterval(function () {
+                    if (window.location.hash.indexOf('/mypreferencesmenu') === -1) {
+                        clearInterval(prefsCheckInterval);
+                        prefsCheckInterval = null;
+                        return;
+                    }
+                    addPreferencesLink();
+                }, 500);
+            }
         }
 
         window.addEventListener('hashchange', checkPreferencesPage);
