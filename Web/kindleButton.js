@@ -73,7 +73,11 @@
             mostActiveUser: 'Most Active User',
             mostCommonFormat: 'Most Common Format',
             averageDailyActivity: 'Average Daily',
-            totalDataTransferred: 'Total Data'
+            totalDataTransferred: 'Total Data',
+            selectDevice: 'Select Device',
+            chooseDevice: 'Choose which device to send to:',
+            sendToDevice: 'Send to {device}',
+            sendingToDevice: 'Sending to {device}...'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -141,7 +145,11 @@
             mostActiveUser: 'Aktivster Benutzer',
             mostCommonFormat: 'H\u00e4ufigstes Format',
             averageDailyActivity: 'Durchschnittlich pro Tag',
-            totalDataTransferred: 'Datenvolumen insgesamt'
+            totalDataTransferred: 'Datenvolumen insgesamt',
+            selectDevice: 'Ger\u00e4t w\u00e4hlen',
+            chooseDevice: 'W\u00e4hle das Ger\u00e4t f\u00fcr den Versand:',
+            sendToDevice: 'An {device} senden',
+            sendingToDevice: 'Wird an {device} versendet...'
         }
     };
 
@@ -577,19 +585,150 @@
     function sendBook(item, btn) {
         var userId = ApiClient.getCurrentUserId();
 
-        // Check if user has Kindle email configured
+        // First check if user has multiple devices
         ApiClient.ajax({
             type: 'GET',
-            url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
+            url: ApiClient.getUrl('Kindle/Devices', { userId: userId }),
             dataType: 'json'
         }).then(function (result) {
-            if (result.email) {
-                doSend(item, btn, userId);
+            var devices = result.devices || [];
+
+            if (devices.length > 1) {
+                // Show device selection dialog
+                showDeviceSelectionDialog(item, btn, userId, devices);
+            } else if (devices.length === 1) {
+                // Auto-select the single device
+                doSendWithDevice(item, btn, userId, devices[0].id);
             } else {
-                showEmailDialog(item, btn, userId);
+                // Fall back to email-based sending (legacy)
+                ApiClient.ajax({
+                    type: 'GET',
+                    url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
+                    dataType: 'json'
+                }).then(function (emailResult) {
+                    if (emailResult.email) {
+                        doSend(item, btn, userId);
+                    } else {
+                        showEmailDialog(item, btn, userId);
+                    }
+                }).catch(function () {
+                    showEmailDialog(item, btn, userId);
+                });
             }
         }).catch(function () {
-            showEmailDialog(item, btn, userId);
+            // If device fetch fails, fall back to email
+            ApiClient.ajax({
+                type: 'GET',
+                url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
+                dataType: 'json'
+            }).then(function (result) {
+                if (result.email) {
+                    doSend(item, btn, userId);
+                } else {
+                    showEmailDialog(item, btn, userId);
+                }
+            }).catch(function () {
+                showEmailDialog(item, btn, userId);
+            });
+        });
+    }
+
+    function showDeviceSelectionDialog(item, btn, userId, devices) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;';
+
+        var dialog = document.createElement('div');
+        dialog.style.cssText = 'background:var(--theme-card-background,#1c1c1e);color:var(--theme-text-color,#fff);padding:1.5em 2em;border-radius:10px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+
+        dialog.innerHTML = '<h3 style="margin:0 0 0.5em;">' + t('selectDevice') + '</h3>' +
+            '<p style="margin:0 0 1em;opacity:0.8;">' + t('chooseDevice') + '</p>';
+
+        var deviceButtonContainer = document.createElement('div');
+        deviceButtonContainer.style.cssText = 'display:flex;flex-direction:column;gap:0.5em;margin-bottom:1em;';
+
+        devices.forEach(function (device) {
+            var deviceBtn = document.createElement('button');
+            deviceBtn.style.cssText = 'padding:0.8em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:rgba(0,164,220,0.1);color:inherit;cursor:pointer;text-align:left;transition:all 0.2s ease;';
+            deviceBtn.innerHTML = '<div style="font-weight:bold;">' + device.deviceName + '</div>' +
+                '<div style="font-size:0.85em;opacity:0.7;">' + device.email + '</div>' +
+                '<div style="font-size:0.8em;opacity:0.6;">' + (device.preferredFormat || 'epub') + '</div>';
+
+            deviceBtn.addEventListener('mouseover', function () {
+                deviceBtn.style.backgroundColor = 'rgba(0,164,220,0.2)';
+                deviceBtn.style.borderColor = 'rgba(0,164,220,0.5)';
+            });
+
+            deviceBtn.addEventListener('mouseout', function () {
+                deviceBtn.style.backgroundColor = 'rgba(0,164,220,0.1)';
+                deviceBtn.style.borderColor = 'rgba(255,255,255,0.2)';
+            });
+
+            deviceBtn.addEventListener('click', function () {
+                document.body.removeChild(overlay);
+                doSendWithDevice(item, btn, userId, device.id);
+            });
+
+            deviceButtonContainer.appendChild(deviceBtn);
+        });
+
+        dialog.appendChild(deviceButtonContainer);
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.textContent = t('cancel');
+        cancelBtn.style.cssText = 'width:100%;padding:0.5em 1.2em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:transparent;color:inherit;cursor:pointer;';
+        cancelBtn.addEventListener('click', function () {
+            document.body.removeChild(overlay);
+        });
+
+        dialog.appendChild(cancelBtn);
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    function doSendWithDevice(item, btn, userId, deviceId) {
+        // Disable button and show loading state
+        btn.disabled = true;
+        var originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="material-icons detailButton-icon">hourglass_empty</span>' +
+            '<div class="detailButton-content"><div class="detailButton-content-text">' +
+            t('sending') + '</div></div>';
+
+        ApiClient.ajax({
+            type: 'POST',
+            url: ApiClient.getUrl('Kindle/Send', { itemId: item.Id, userId: userId, deviceId: deviceId }),
+            dataType: 'json'
+        }).then(function (result) {
+            btn.innerHTML = '<span class="material-icons detailButton-icon">check</span>' +
+                '<div class="detailButton-content"><div class="detailButton-content-text">' +
+                t('sent') + '</div></div>';
+            showToast(t('sent'));
+
+            setTimeout(function () {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }, 3000);
+        }).catch(function (err) {
+            var errorMsg = t('errorSending');
+            try {
+                var body = JSON.parse(err.responseText || '{}');
+                var lang = getLang();
+                if (lang === 'de' && body.errorDe) {
+                    errorMsg = body.errorDe;
+                } else if (body.error) {
+                    errorMsg = body.error;
+                }
+            } catch (e) { /* ignore parse error */ }
+
+            showToast(errorMsg);
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
         });
     }
 
