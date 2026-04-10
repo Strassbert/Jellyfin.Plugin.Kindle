@@ -43,6 +43,9 @@ namespace Jellyfin.Plugin.Kindle
             // Register Security Service for password encryption
             serviceCollection.AddSingleton<KindleSecurityService>();
 
+            // Register Send History Service
+            serviceCollection.AddSingleton<SendHistoryService>();
+
             // Register Startup filter for middleware
             serviceCollection.AddTransient<IStartupFilter, PluginStartup>();
         }

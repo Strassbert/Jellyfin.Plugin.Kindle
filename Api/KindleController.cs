@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Kindle.Configuration;
+using Jellyfin.Plugin.Kindle.Models;
 using Jellyfin.Plugin.Kindle.Services;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +26,7 @@ namespace Jellyfin.Plugin.Kindle.Api
         private readonly PluginConfiguration _config;
         private readonly KindleMailService _mailService;
         private readonly RateLimitingService _rateLimiter;
+        private readonly SendHistoryService _historyService;
         private readonly ILogger<KindleController> _logger;
 
         public KindleController(
@@ -30,12 +34,14 @@ namespace Jellyfin.Plugin.Kindle.Api
             PluginConfiguration config,
             KindleMailService mailService,
             RateLimitingService rateLimiter,
+            SendHistoryService historyService,
             ILogger<KindleController> logger)
         {
             _libraryManager = libraryManager;
             _config = config;
             _mailService = mailService;
             _rateLimiter = rateLimiter;
+            _historyService = historyService;
             _logger = logger;
         }
 
@@ -203,6 +209,178 @@ namespace Jellyfin.Plugin.Kindle.Api
         }
 
         /// <summary>
+        /// Get all devices for a user
+        /// </summary>
+        [HttpGet("Devices")]
+        public IActionResult GetUserDevices([FromQuery, Required] string userId)
+        {
+            if (!_config.EnableMultipleDevices)
+            {
+                return BadRequest(new { error = "Multiple devices feature is disabled." });
+            }
+
+            var devices = _config.UserDevices.TryGetValue(userId, out var userDevices)
+                ? userDevices.Where(d => d.IsActive).ToList()
+                : new List<UserDevice>();
+
+            return Ok(new { devices });
+        }
+
+        /// <summary>
+        /// Add a new device for user
+        /// </summary>
+        [HttpPost("Devices")]
+        public IActionResult AddDevice([FromQuery, Required] string userId, [FromBody] AddDeviceRequest request)
+        {
+            if (!_config.EnableMultipleDevices)
+            {
+                return BadRequest(new { error = "Multiple devices feature is disabled." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.DeviceName) || string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { error = "Device name and email are required." });
+            }
+
+            if (!IsValidEmail(request.Email))
+            {
+                return BadRequest(new { error = "Invalid email format." });
+            }
+
+            var devices = _config.UserDevices;
+            if (!devices.ContainsKey(userId))
+            {
+                devices[userId] = new List<UserDevice>();
+            }
+
+            // Check for duplicates
+            if (devices[userId].Any(d => d.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)))
+            {
+                return BadRequest(new { error = "Email already exists for this user." });
+            }
+
+            var newDevice = new UserDevice
+            {
+                UserId = userId,
+                DeviceName = request.DeviceName.Trim(),
+                Email = request.Email.Trim(),
+                PreferredFormat = request.PreferredFormat ?? "epub",
+                IsDefault = devices[userId].Count == 0 // First device is default
+            };
+
+            devices[userId].Add(newDevice);
+            _config.UserDevices = devices;
+            Plugin.Instance.SaveConfiguration();
+
+            _logger.LogInformation(
+                "Device added - UserId: {UserId}, DeviceId: {DeviceId}, DeviceName: {DeviceName}, Email: {Email}, Timestamp: {Timestamp}",
+                userId, newDevice.Id, newDevice.DeviceName, newDevice.Email, DateTime.UtcNow);
+
+            return Ok(new { message = "Device added successfully.", device = newDevice });
+        }
+
+        /// <summary>
+        /// Update an existing device
+        /// </summary>
+        [HttpPut("Devices/{deviceId}")]
+        public IActionResult UpdateDevice([FromQuery, Required] string userId, string deviceId, [FromBody] UpdateDeviceRequest request)
+        {
+            var devices = _config.UserDevices;
+            if (!devices.TryGetValue(userId, out var userDevices))
+            {
+                return NotFound(new { error = "User not found." });
+            }
+
+            var device = userDevices.FirstOrDefault(d => d.Id == deviceId);
+            if (device == null)
+            {
+                return NotFound(new { error = "Device not found." });
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.DeviceName))
+            {
+                device.DeviceName = request.DeviceName.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Email))
+            {
+                if (!IsValidEmail(request.Email))
+                {
+                    return BadRequest(new { error = "Invalid email format." });
+                }
+
+                // Check for duplicates (excluding current device)
+                if (userDevices.Any(d => d.Id != deviceId && d.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return BadRequest(new { error = "Email already in use." });
+                }
+
+                device.Email = request.Email.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.PreferredFormat))
+            {
+                device.PreferredFormat = request.PreferredFormat.ToLower();
+            }
+
+            if (request.IsDefault.HasValue && request.IsDefault.Value)
+            {
+                // Unset other devices as default
+                foreach (var d in userDevices.Where(d => d.Id != deviceId))
+                {
+                    d.IsDefault = false;
+                }
+                device.IsDefault = true;
+            }
+
+            device.ModifiedAt = DateTime.UtcNow;
+            _config.UserDevices = devices;
+            Plugin.Instance.SaveConfiguration();
+
+            _logger.LogInformation(
+                "Device updated - UserId: {UserId}, DeviceId: {DeviceId}, Timestamp: {Timestamp}",
+                userId, deviceId, DateTime.UtcNow);
+
+            return Ok(new { message = "Device updated successfully.", device });
+        }
+
+        /// <summary>
+        /// Delete a device
+        /// </summary>
+        [HttpDelete("Devices/{deviceId}")]
+        public IActionResult DeleteDevice([FromQuery, Required] string userId, string deviceId)
+        {
+            var devices = _config.UserDevices;
+            if (!devices.TryGetValue(userId, out var userDevices))
+            {
+                return NotFound(new { error = "User not found." });
+            }
+
+            var device = userDevices.FirstOrDefault(d => d.Id == deviceId);
+            if (device == null)
+            {
+                return NotFound(new { error = "Device not found." });
+            }
+
+            userDevices.Remove(device);
+
+            // If this was default, set another as default
+            if (device.IsDefault && userDevices.Count > 0)
+            {
+                userDevices[0].IsDefault = true;
+            }
+
+            _config.UserDevices = devices;
+            Plugin.Instance.SaveConfiguration();
+
+            _logger.LogInformation(
+                "Device deleted - UserId: {UserId}, DeviceId: {DeviceId}, DeviceName: {DeviceName}, Timestamp: {Timestamp}",
+                userId, deviceId, device.DeviceName, DateTime.UtcNow);
+
+            return Ok(new { message = "Device deleted successfully." });
+        }
+
+        /// <summary>
         /// Test SMTP connection with provided settings
         /// Admin-only endpoint for validating SMTP configuration
         /// </summary>
@@ -292,5 +470,115 @@ namespace Jellyfin.Plugin.Kindle.Api
                 });
             }
         }
+
+        /// <summary>
+        /// Get send history for current user
+        /// </summary>
+        [HttpGet("History")]
+        public IActionResult GetUserHistory([FromQuery] int limit = 50)
+        {
+            if (!_config.EnableSendHistory)
+            {
+                return BadRequest(new { error = "Send history tracking is disabled." });
+            }
+
+            var userId = HttpContext.User.FindFirst("sub")?.Value ??
+                        HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var history = _historyService.GetUserHistory(userId, Math.Min(limit, 100));
+            return Ok(new { history });
+        }
+
+        /// <summary>
+        /// Get user statistics
+        /// </summary>
+        [HttpGet("Statistics")]
+        public IActionResult GetUserStatistics()
+        {
+            if (!_config.EnableSendHistory)
+            {
+                return BadRequest(new { error = "Send history tracking is disabled." });
+            }
+
+            var userId = HttpContext.User.FindFirst("sub")?.Value ??
+                        HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var stats = _historyService.GetUserStatistics(userId);
+            return Ok(new { statistics = stats });
+        }
+
+        /// <summary>
+        /// Get system-wide statistics (Admin only)
+        /// </summary>
+        [HttpGet("Statistics/System")]
+        [Authorize(Policy = "RequireAdministratorRole")]
+        public IActionResult GetSystemStatistics()
+        {
+            if (!_config.EnableSendHistory)
+            {
+                return BadRequest(new { error = "Send history tracking is disabled." });
+            }
+
+            var stats = _historyService.GetSystemStatistics();
+            return Ok(new { statistics = stats });
+        }
+
+        /// <summary>
+        /// Clear send history for a user (Admin only)
+        /// </summary>
+        [HttpDelete("History")]
+        [Authorize(Policy = "RequireAdministratorRole")]
+        public IActionResult ClearHistory([FromQuery] string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return BadRequest(new { error = "UserId is required." });
+            }
+
+            _historyService.ClearUserHistory(userId);
+            return Ok(new { message = "User history cleared." });
+        }
+
+        /// <summary>
+        /// Clear all send history (Admin only)
+        /// </summary>
+        [HttpDelete("History/All")]
+        [Authorize(Policy = "RequireAdministratorRole")]
+        public IActionResult ClearAllHistory()
+        {
+            _historyService.ClearAllHistory();
+            return Ok(new { message = "All history cleared." });
+        }
+    }
+
+    /// <summary>
+    /// Request model for adding a new device
+    /// </summary>
+    public class AddDeviceRequest
+    {
+        public string DeviceName { get; set; }
+        public string Email { get; set; }
+        public string PreferredFormat { get; set; } = "epub";
+    }
+
+    /// <summary>
+    /// Request model for updating a device
+    /// </summary>
+    public class UpdateDeviceRequest
+    {
+        public string DeviceName { get; set; }
+        public string Email { get; set; }
+        public string PreferredFormat { get; set; }
+        public bool? IsDefault { get; set; }
     }
 }

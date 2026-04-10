@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Xml.Serialization;
+using Jellyfin.Plugin.Kindle.Models;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.Kindle.Configuration
@@ -21,7 +23,7 @@ namespace Jellyfin.Plugin.Kindle.Configuration
         public string OAuthClientSecret { get; set; } = string.Empty;
         public string OAuthRefreshToken { get; set; } = string.Empty;
 
-        // Per-user Kindle email addresses stored as JSON string (XmlSerializer cannot handle Dictionary)
+        // === LEGACY: Per-user Kindle email addresses (backward compatibility) ===
         public string UserKindleEmailsJson { get; set; } = "{}";
 
         [XmlIgnore]
@@ -30,5 +32,72 @@ namespace Jellyfin.Plugin.Kindle.Configuration
             get => JsonSerializer.Deserialize<Dictionary<string, string>>(UserKindleEmailsJson ?? "{}") ?? new();
             set => UserKindleEmailsJson = JsonSerializer.Serialize(value);
         }
+
+        // === NEW: Multiple devices per user ===
+        /// <summary>
+        /// User devices stored as JSON: { userId: [UserDevice[], ...] }
+        /// </summary>
+        public string UserDevicesJson { get; set; } = "{}";
+
+        [XmlIgnore]
+        public Dictionary<string, List<UserDevice>> UserDevices
+        {
+            get
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<Dictionary<string, List<UserDevice>>>(UserDevicesJson ?? "{}") ?? new();
+                }
+                catch
+                {
+                    return new();
+                }
+            }
+            set => UserDevicesJson = JsonSerializer.Serialize(value ?? new());
+        }
+
+        // === NEW: Send history and statistics ===
+        /// <summary>
+        /// Send history logs stored as JSON array
+        /// </summary>
+        public string SendLogsJson { get; set; } = "[]";
+
+        [XmlIgnore]
+        public List<SendLog> SendLogs
+        {
+            get
+            {
+                try
+                {
+                    return JsonSerializer.Deserialize<List<SendLog>>(SendLogsJson ?? "[]") ?? new();
+                }
+                catch
+                {
+                    return new();
+                }
+            }
+            set => SendLogsJson = JsonSerializer.Serialize(value ?? new());
+        }
+
+        // === Feature Flags ===
+        /// <summary>
+        /// Enable multiple devices per user
+        /// </summary>
+        public bool EnableMultipleDevices { get; set; } = true;
+
+        /// <summary>
+        /// Enable send history tracking
+        /// </summary>
+        public bool EnableSendHistory { get; set; } = true;
+
+        /// <summary>
+        /// Maximum number of send logs to keep (0 = unlimited)
+        /// </summary>
+        public int MaxSendLogs { get; set; } = 1000;
+
+        /// <summary>
+        /// Auto-cleanup old logs (days, 0 = disabled)
+        /// </summary>
+        public int AutoCleanupOldLogs { get; set; } = 90;
     }
 }
