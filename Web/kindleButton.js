@@ -51,7 +51,19 @@
             noDevices: 'No devices configured yet.',
             deviceAdded: 'Device added successfully.',
             deviceUpdated: 'Device updated successfully.',
-            deviceRemoved: 'Device removed successfully.'
+            deviceRemoved: 'Device removed successfully.',
+            viewHistory: 'View History',
+            sendHistory: 'Send History',
+            bookTitle: 'Book',
+            sentTo: 'Sent To',
+            sentAt: 'Date',
+            status: 'Status',
+            fileSize: 'Size',
+            noHistory: 'No send history yet.',
+            sentSuccessfully: 'Sent',
+            sentFailed: 'Failed',
+            sentPending: 'Pending',
+            clearHistory: 'Clear History'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -97,7 +109,19 @@
             noDevices: 'Noch keine Ger\u00e4te konfiguriert.',
             deviceAdded: 'Ger\u00e4t erfolgreich hinzugef\u00fcgt.',
             deviceUpdated: 'Ger\u00e4t erfolgreich aktualisiert.',
-            deviceRemoved: 'Ger\u00e4t erfolgreich entfernt.'
+            deviceRemoved: 'Ger\u00e4t erfolgreich entfernt.',
+            viewHistory: 'Verlauf anzeigen',
+            sendHistory: 'Versendverlauf',
+            bookTitle: 'Buch',
+            sentTo: 'Versendet an',
+            sentAt: 'Datum',
+            status: 'Status',
+            fileSize: 'Gr\u00f6\u00dfe',
+            noHistory: 'Noch kein Versendverlauf.',
+            sentSuccessfully: 'Versendet',
+            sentFailed: 'Fehlgeschlagen',
+            sentPending: 'Ausstehend',
+            clearHistory: 'Verlauf l\u00f6schen'
         }
     };
 
@@ -372,7 +396,16 @@
             openDeviceManagement(userId);
         });
 
+        var historyBtn = document.createElement('button');
+        historyBtn.textContent = t('viewHistory');
+        historyBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
+        historyBtn.addEventListener('click', function () {
+            popup.remove();
+            openSendHistory(userId);
+        });
+
         buttonContainer.appendChild(devicesBtn);
+        buttonContainer.appendChild(historyBtn);
         buttonContainer.appendChild(clearBtn);
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(saveBtn);
@@ -833,5 +866,152 @@
                 showToast('Failed to remove device.');
             });
         }
+    }
+
+    // Send History Functions
+    function openSendHistory(userId) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10001;display:flex;align-items:center;justify-content:center;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:var(--theme-card-background,#1c1c1e);color:var(--theme-text-color,#fff);padding:2em;border-radius:10px;max-width:800px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+        modal.className = 'kindle-history-modal';
+
+        var title = document.createElement('h2');
+        title.textContent = t('sendHistory');
+        title.style.cssText = 'margin:0 0 1em 0;';
+
+        var historyTable = document.createElement('div');
+        historyTable.className = 'kindle-history-table';
+        historyTable.style.cssText = 'margin-bottom:1em;';
+
+        var footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;gap:0.5em;justify-content:flex-end;';
+
+        var clearBtn = document.createElement('button');
+        clearBtn.textContent = t('clearHistory');
+        clearBtn.style.cssText = 'padding:0.5em 1.2em;border:1px solid rgba(244,67,54,0.4);border-radius:5px;background:transparent;color:#f44336;cursor:pointer;';
+        clearBtn.addEventListener('click', function () {
+            if (confirm('Clear all send history? This cannot be undone.')) {
+                ApiClient.ajax({
+                    type: 'DELETE',
+                    url: ApiClient.getUrl('Kindle/History/All')
+                }).then(function () {
+                    showToast('History cleared');
+                    loadSendHistory(userId, historyTable);
+                }).catch(function () {
+                    showToast('Failed to clear history');
+                });
+            }
+        });
+
+        var closeBtn = document.createElement('button');
+        closeBtn.textContent = t('cancel');
+        closeBtn.style.cssText = 'padding:0.5em 1.2em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:transparent;color:inherit;cursor:pointer;';
+        closeBtn.addEventListener('click', function () {
+            document.body.removeChild(overlay);
+        });
+
+        footer.appendChild(clearBtn);
+        footer.appendChild(closeBtn);
+
+        modal.appendChild(title);
+        modal.appendChild(historyTable);
+        modal.appendChild(footer);
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        loadSendHistory(userId, historyTable);
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    function loadSendHistory(userId, container) {
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Kindle/History', { userId: userId, limit: 100 }),
+            dataType: 'json'
+        }).then(function (result) {
+            var history = result.logs || [];
+            container.innerHTML = '';
+
+            if (history.length === 0) {
+                var emptyMsg = document.createElement('div');
+                emptyMsg.style.cssText = 'text-align:center;padding:2em;opacity:0.6;';
+                emptyMsg.textContent = t('noHistory');
+                container.appendChild(emptyMsg);
+                return;
+            }
+
+            // Create table-like display
+            var table = document.createElement('div');
+            table.style.cssText = 'display:flex;flex-direction:column;gap:0.5em;';
+
+            // Header
+            var header = document.createElement('div');
+            header.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 120px 100px 80px;gap:0.5em;padding:0.5em;background:rgba(0,164,220,0.1);border-radius:3px;font-weight:bold;font-size:0.9em;';
+            header.innerHTML = '<div>' + t('bookTitle') + '</div><div>' + t('sentTo') + '</div><div>' + t('sentAt') + '</div><div>' + t('status') + '</div><div>' + t('fileSize') + '</div>';
+
+            table.appendChild(header);
+
+            // Rows
+            history.forEach(function (log) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 120px 100px 80px;gap:0.5em;padding:0.8em;border:1px solid rgba(255,255,255,0.1);border-radius:3px;font-size:0.85em;align-items:center;';
+
+                var statusClass = log.status === 0 ? 'success' : log.status === 1 ? 'failed' : 'pending';
+                var statusText = log.status === 0 ? t('sentSuccessfully') : log.status === 1 ? t('sentFailed') : t('sentPending');
+
+                var title = document.createElement('div');
+                title.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+                title.title = log.bookTitle || log.fileName || 'Unknown';
+                title.textContent = log.bookTitle || log.fileName || 'Unknown';
+
+                var email = document.createElement('div');
+                email.style.cssText = 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0.8;font-size:0.9em;';
+                email.textContent = log.recipientEmail || '';
+
+                var date = document.createElement('div');
+                date.style.cssText = 'white-space:nowrap;font-size:0.85em;opacity:0.7;';
+                var logDate = new Date(log.sentAt);
+                date.textContent = logDate.toLocaleDateString() + ' ' + logDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                var status = document.createElement('div');
+                status.style.cssText = 'padding:0.3em 0.6em;border-radius:3px;text-align:center;font-size:0.8em;background:' +
+                    (statusClass === 'success' ? 'rgba(76,175,80,0.2);color:#4caf50;' :
+                     statusClass === 'failed' ? 'rgba(244,67,54,0.2);color:#f44336;' :
+                     'rgba(255,193,7,0.2);color:#ffc107;');
+                status.textContent = statusText;
+
+                var size = document.createElement('div');
+                size.style.cssText = 'text-align:right;opacity:0.7;';
+                size.textContent = formatBytes(log.fileSizeBytes);
+
+                row.appendChild(title);
+                row.appendChild(email);
+                row.appendChild(date);
+                row.appendChild(status);
+                row.appendChild(size);
+
+                table.appendChild(row);
+            });
+
+            container.appendChild(table);
+        }).catch(function () {
+            container.innerHTML = '<div style="text-align:center;padding:2em;color:#f44336;">Failed to load history</div>';
+        });
+    }
+
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 B';
+        var k = 1024;
+        var sizes = ['B', 'KB', 'MB', 'GB'];
+        var i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i];
     }
 })();

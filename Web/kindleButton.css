@@ -252,3 +252,17 @@
     align-items: flex-start;
     margin-bottom: 0.5em;
 }
+
+/* Send History Modal */
+.kindle-history-modal {
+    display: flex;
+    flex-direction: column;
+}
+
+.kindle-history-table {
+    flex-grow: 1;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    padding: 0.5em;
+}
