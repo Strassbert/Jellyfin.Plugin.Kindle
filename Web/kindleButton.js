@@ -191,9 +191,7 @@
             btn.style.background = cs.background;
         }
 
-        btn.innerHTML = '<span class="material-icons detailButton-icon">send</span>' +
-            '<div class="detailButton-content"><div class="detailButton-content-text">' +
-            t('sendToKindle') + '</div></div>';
+        btn.innerHTML = '<span class="material-icons detailButton-icon">send</span>';
         btn.addEventListener('click', function () {
             sendBook(item, btn);
         });
@@ -224,18 +222,14 @@
         // Disable button and show loading state
         btn.disabled = true;
         var originalHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="material-icons detailButton-icon">hourglass_empty</span>' +
-            '<div class="detailButton-content"><div class="detailButton-content-text">' +
-            t('sending') + '</div></div>';
+        btn.innerHTML = '<span class="material-icons detailButton-icon">hourglass_empty</span>';
 
         ApiClient.ajax({
             type: 'POST',
             url: ApiClient.getUrl('Kindle/Send', { itemId: item.Id, userId: userId }),
             dataType: 'json'
         }).then(function (result) {
-            btn.innerHTML = '<span class="material-icons detailButton-icon">check</span>' +
-                '<div class="detailButton-content"><div class="detailButton-content-text">' +
-                t('sent') + '</div></div>';
+            btn.innerHTML = '<span class="material-icons detailButton-icon">check</span>';
             showToast(t('sent'));
 
             setTimeout(function () {
