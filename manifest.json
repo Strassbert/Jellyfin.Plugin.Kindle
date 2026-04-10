@@ -2,12 +2,20 @@
   {
     "guid": "E3B2B4A1-1234-4567-89AB-CDEF12345678",
     "name": "E-Book Share",
-    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) directly from the detail page to an E-Book via email.",
-    "overview": "Adds a 'Send to E-Book Reader' button on book detail pages. Supports per-user E-Book email addresses, SMTP and OAuth2 authentication, and i18n (English/German).",
+    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) to multiple E-Readers with device management, send history, and admin statistics.",
+    "overview": "Modern e-book sharing for Jellyfin with multi-device support, complete send history, admin dashboard, and i18n (English/German). Includes device management, statistics, rate limiting, and SMTP/OAuth2 support.",
     "owner": "Strassbert",
     "category": "Email",
     "imageUrl": "https://raw.githubusercontent.com/Strassbert/Jellyfin.Plugin.Kindle/main/thumb.png",
     "versions": [
+      {
+        "version": "2.0.0.0",
+        "changelog": "Phase 3: Multi-device support, send history, admin dashboard, device management, statistics, and major UI/UX improvements. Features: device selection dialog, complete send history with status display, per-user and system-wide statistics, admin dashboard, rate limiting, improved error handling, security fixes, authorization checks, and full i18n support.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/Strassbert/Jellyfin.Plugin.Kindle/releases/download/2.0.0.0/Jellyfin.Plugin.Kindle.zip",
+        "checksum": "TODO_UPDATE_WITH_ACTUAL_CHECKSUM",
+        "timestamp": "2026-04-10T00:00:00Z"
+      },
       {
         "version": "1.2.0.0",
         "changelog": "Updated Names and Example for User",
