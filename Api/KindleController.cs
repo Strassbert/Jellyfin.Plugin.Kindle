@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Net.Mail;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.Kindle.Configuration;
 using Jellyfin.Plugin.Kindle.Services;
 using MediaBrowser.Controller.Library;
 using Microsoft.AspNetCore.Authorization;
@@ -18,17 +20,41 @@ namespace Jellyfin.Plugin.Kindle.Api
         private const long MaxFileSizeBytes = 50L * 1024 * 1024; // 50 MB Amazon limit
 
         private readonly ILibraryManager _libraryManager;
+        private readonly PluginConfiguration _config;
         private readonly KindleMailService _mailService;
         private readonly ILogger<KindleController> _logger;
 
         public KindleController(
             ILibraryManager libraryManager,
+            PluginConfiguration config,
             KindleMailService mailService,
             ILogger<KindleController> logger)
         {
             _libraryManager = libraryManager;
+            _config = config;
             _mailService = mailService;
             _logger = logger;
+        }
+
+        /// <summary>
+        /// Validates email format using System.Net.Mail.MailAddress (RFC 5322 compliant)
+        /// </summary>
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email) || email.Length > 254)
+                    return false;
+
+                // MailAddress will throw if invalid
+                var addr = new MailAddress(email);
+                // Double-check that normalized address matches (catches some edge cases)
+                return addr.Address == email.ToLower() || email.Contains(addr.Address);
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         [HttpPost("Send")]
@@ -72,8 +98,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             }
 
             // User email check
-            var config = Plugin.Instance.Configuration;
-            if (!config.UserKindleEmails.TryGetValue(userId, out var kindleEmail) || string.IsNullOrEmpty(kindleEmail))
+            if (!_config.UserKindleEmails.TryGetValue(userId, out var kindleEmail) || string.IsNullOrEmpty(kindleEmail))
             {
                 return BadRequest(new
                 {
@@ -85,7 +110,7 @@ namespace Jellyfin.Plugin.Kindle.Api
 
             try
             {
-                await _mailService.SendBookAsync(kindleEmail, item.Path, item.Name + extension, config);
+                await _mailService.SendBookAsync(kindleEmail, item.Path, item.Name + extension, _config);
                 _logger.LogInformation("Book '{Name}' sent to {Email} for user {UserId}.", item.Name, kindleEmail, userId);
                 return Ok(new { message = "Sent to E-Book Reader.", messageDe = "An E-Book Reader gesendet." });
             }
@@ -103,8 +128,7 @@ namespace Jellyfin.Plugin.Kindle.Api
         [HttpGet("UserEmail")]
         public IActionResult GetUserEmail([FromQuery, Required] string userId)
         {
-            var config = Plugin.Instance.Configuration;
-            config.UserKindleEmails.TryGetValue(userId, out var email);
+            _config.UserKindleEmails.TryGetValue(userId, out var email);
             return Ok(new { email = email ?? string.Empty });
         }
 
@@ -116,16 +140,15 @@ namespace Jellyfin.Plugin.Kindle.Api
                 return BadRequest(new { error = "Email cannot be empty.", errorDe = "E-Mail darf nicht leer sein." });
             }
 
-            // Basic email format validation
-            if (!email.Contains('@') || !email.Contains('.'))
+            // Validate email format using MailAddress parser (RFC 5322 compliant)
+            if (!IsValidEmail(email.Trim()))
             {
                 return BadRequest(new { error = "Invalid email format.", errorDe = "Ungültiges E-Mail-Format." });
             }
 
-            var config = Plugin.Instance.Configuration;
-            var emails = config.UserKindleEmails;
+            var emails = _config.UserKindleEmails;
             emails[userId] = email.Trim();
-            config.UserKindleEmails = emails;
+            _config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
             _logger.LogInformation("E-Book Reader email updated for user {UserId}.", userId);
@@ -135,10 +158,9 @@ namespace Jellyfin.Plugin.Kindle.Api
         [HttpDelete("UserEmail")]
         public IActionResult DeleteUserEmail([FromQuery, Required] string userId)
         {
-            var config = Plugin.Instance.Configuration;
-            var emails = config.UserKindleEmails;
+            var emails = _config.UserKindleEmails;
             emails.Remove(userId);
-            config.UserKindleEmails = emails;
+            _config.UserKindleEmails = emails;
             Plugin.Instance.SaveConfiguration();
 
             _logger.LogInformation("E-Book Reader email removed for user {UserId}.", userId);

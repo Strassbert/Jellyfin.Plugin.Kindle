@@ -32,6 +32,7 @@ namespace Jellyfin.Plugin.Kindle.Configuration
             context.Response.Body = responseBody;
 
             // Prevent downstream compression so we can read the response as plain text.
+            // Only needed for index pages, not affecting other requests.
             var originalAcceptEncoding = context.Request.Headers.AcceptEncoding.ToString();
             context.Request.Headers.Remove("Accept-Encoding");
 
@@ -57,12 +58,24 @@ namespace Jellyfin.Plugin.Kindle.Configuration
 
                 if (!text.Contains("KindlePlugin/ClientScript"))
                 {
-                    var modifiedText = text.Replace("</body>", $"{ScriptTag}</body>");
-                    var modifiedBytes = Encoding.UTF8.GetBytes(modifiedText);
-                    context.Response.Body = originalBodyStream;
-                    context.Response.ContentLength = null;
-                    await originalBodyStream.WriteAsync(modifiedBytes, 0, modifiedBytes.Length);
-                    _logger.LogDebug("[Kindle] Injected client script into index page.");
+                    // Use LastIndexOf to safely find the last </body> tag
+                    var index = text.LastIndexOf("</body>");
+                    if (index >= 0)
+                    {
+                        var modifiedText = text.Insert(index, ScriptTag);
+                        var modifiedBytes = Encoding.UTF8.GetBytes(modifiedText);
+                        context.Response.Body = originalBodyStream;
+                        context.Response.ContentLength = null;
+                        await originalBodyStream.WriteAsync(modifiedBytes, 0, modifiedBytes.Length);
+                        _logger.LogDebug("[Kindle] Injected client script into index page.");
+                    }
+                    else
+                    {
+                        // Fallback: if no </body> found, just copy response as-is
+                        responseBody.Seek(0, SeekOrigin.Begin);
+                        context.Response.Body = originalBodyStream;
+                        await responseBody.CopyToAsync(originalBodyStream);
+                    }
                 }
                 else
                 {

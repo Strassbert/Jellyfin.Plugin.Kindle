@@ -74,6 +74,14 @@
         return i18n[getLang()][key] || i18n.en[key] || key;
     }
 
+    // Validate email format (RFC 5322 simplified)
+    function isValidEmail(email) {
+        if (!email || email.length > 254) return false;
+        // Pattern: localpart@domain.tld
+        var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email) && email.indexOf('..') === -1;
+    }
+
     function showToast(msg) {
         if (typeof Dashboard !== 'undefined' && Dashboard.alert) {
             Dashboard.alert(msg);
@@ -134,12 +142,18 @@
     }
 
     function setupHeaderButton() {
+        var buttonCreated = false;
         var observer = new MutationObserver(function (mutations) {
+            // Early exit if button already created
+            if (buttonCreated) return;
+
             var headerRight = document.querySelector('.headerRight');
             if (headerRight && !document.querySelector('.kindle-settings-button')) {
                 var button = createHeaderButton();
                 headerRight.prepend(button);
-                console.log('[Kindle] Settings button injected into header.');
+                buttonCreated = true;
+                observer.disconnect(); // STOP monitoring after button creation
+                console.log('[Kindle] Settings button injected. Observer stopped.');
             }
         });
 
@@ -153,6 +167,8 @@
         if (headerRight && !document.querySelector('.kindle-settings-button')) {
             var button = createHeaderButton();
             headerRight.prepend(button);
+            buttonCreated = true;
+            observer.disconnect(); // Stop if created immediately
         }
     }
 
@@ -232,6 +248,11 @@
 
         document.body.appendChild(popup);
 
+        // Prevent clicks inside popup from closing it
+        popup.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
         // Close popup when clicking outside
         var closeHandler = function (e) {
             if (!popup.contains(e.target) &&
@@ -241,9 +262,8 @@
                 document.removeEventListener('click', closeHandler);
             }
         };
-        setTimeout(function () {
-            document.addEventListener('click', closeHandler);
-        }, 0);
+        // Register immediately (synchronously), not with setTimeout
+        document.addEventListener('click', closeHandler, true);
     }
 
     function populatePopup(popup, currentEmail, userId) {
@@ -371,7 +391,7 @@
 
         saveBtn.addEventListener('click', function () {
             var email = emailInput.value.trim();
-            if (!email || !email.includes('@')) {
+            if (!isValidEmail(email)) {
                 emailInput.style.borderColor = '#f44336';
                 return;
             }
