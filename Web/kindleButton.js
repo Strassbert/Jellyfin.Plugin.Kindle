@@ -27,6 +27,10 @@
             emailLabel: 'E-Book Reader Email',
             currentEmail: 'Current Email: {email}',
             noEmailSet: 'No email configured',
+            senderEmailTitle: 'Sender Email Address',
+            senderEmailInfo: 'Books will be sent from the following email address. You must approve this address in your e-reader settings to receive files.',
+            senderEmail: 'Sender: {email}',
+            noSenderEmail: 'No sender email configured',
             helpTitle: 'Example Kindle',
             helpText1: 'To find your Send to Kindle email address, go to ',
             helpLink1: 'Manage Your Content and Devices',
@@ -55,6 +59,10 @@
             emailLabel: 'E-Book Reader E-Mail',
             currentEmail: 'Aktuelle E-Mail: {email}',
             noEmailSet: 'Keine E-Mail konfiguriert',
+            senderEmailTitle: 'Absender E-Mail-Adresse',
+            senderEmailInfo: 'B\u00fccher werden von der folgenden E-Mail-Adresse versendet. Du musst diese Adresse in deinen E-Reader-Einstellungen genehmigen, um Dateien zu erhalten.',
+            senderEmail: 'Absender: {email}',
+            noSenderEmail: 'Keine Absender-E-Mail konfiguriert',
             helpTitle: 'Beispiel Kindle',
             helpText1: 'Um deine f\u00fcr Send to Kindle verwendete E-Mail-Adresse zu finden, w\u00e4hle ',
             helpLink1: 'Meine Inhalte und Ger\u00e4te verwalten',
@@ -279,6 +287,40 @@
             currentEmailDisplay.textContent = t('noEmailSet');
         }
 
+        // Sender email info section
+        var senderInfoSection = document.createElement('div');
+        senderInfoSection.className = 'kindle-popup-sender-info';
+
+        var senderTitle = document.createElement('div');
+        senderTitle.className = 'kindle-popup-sender-title';
+        senderTitle.textContent = t('senderEmailTitle');
+
+        var senderDescription = document.createElement('div');
+        senderDescription.className = 'kindle-popup-sender-description';
+        senderDescription.textContent = t('senderEmailInfo');
+
+        var senderEmail = document.createElement('div');
+        senderEmail.className = 'kindle-popup-sender-email';
+
+        senderInfoSection.appendChild(senderTitle);
+        senderInfoSection.appendChild(senderDescription);
+        senderInfoSection.appendChild(senderEmail);
+
+        // Fetch sender email
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Kindle/SenderEmail'),
+            dataType: 'json'
+        }).then(function (result) {
+            if (result.senderEmail) {
+                senderEmail.textContent = t('senderEmail').replace('{email}', result.senderEmail);
+            } else {
+                senderEmail.textContent = t('noSenderEmail');
+            }
+        }).catch(function () {
+            senderEmail.textContent = t('noSenderEmail');
+        });
+
         var buttonContainer = document.createElement('div');
         buttonContainer.className = 'kindle-popup-buttons';
 
@@ -346,6 +388,7 @@
 
         popup.appendChild(emailInput);
         popup.appendChild(currentEmailDisplay);
+        popup.appendChild(senderInfoSection);
         popup.appendChild(buttonContainer);
         popup.appendChild(helpSection);
 

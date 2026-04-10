@@ -559,6 +559,16 @@ namespace Jellyfin.Plugin.Kindle.Api
             _historyService.ClearAllHistory();
             return Ok(new { message = "All history cleared." });
         }
+
+        /// <summary>
+        /// Get the sender email address configured by the admin
+        /// </summary>
+        [HttpGet("SenderEmail")]
+        public IActionResult GetSenderEmail()
+        {
+            var senderEmail = _config.SenderEmail ?? string.Empty;
+            return Ok(new { senderEmail });
+        }
     }
 
     /// <summary>
