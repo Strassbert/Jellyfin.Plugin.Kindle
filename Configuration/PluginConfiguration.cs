@@ -94,10 +94,5 @@ namespace Jellyfin.Plugin.Kindle.Configuration
         /// Maximum number of send logs to keep (0 = unlimited)
         /// </summary>
         public int MaxSendLogs { get; set; } = 1000;
-
-        /// <summary>
-        /// Auto-cleanup old logs (days, 0 = disabled)
-        /// </summary>
-        public int AutoCleanupOldLogs { get; set; } = 90;
     }
 }

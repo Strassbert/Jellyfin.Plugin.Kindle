@@ -62,18 +62,6 @@ namespace Jellyfin.Plugin.Kindle.Services
         }
 
         /// <summary>
-        /// Get send history for a specific device
-        /// </summary>
-        public List<SendLog> GetDeviceHistory(string deviceId, int limit = 50)
-        {
-            return _config.SendLogs
-                .Where(l => l.DeviceId == deviceId)
-                .OrderByDescending(l => l.SentAt)
-                .Take(limit)
-                .ToList();
-        }
-
-        /// <summary>
         /// Get statistics for the entire system (Admin only)
         /// </summary>
         public SystemStatistics GetSystemStatistics()

@@ -35,10 +35,9 @@ namespace Jellyfin.Plugin.Kindle.Services
                 var base64 = Convert.ToBase64String(encryptedBytes);
                 return EncryptionPrefix + base64;
             }
-            catch (Exception ex)
+            catch
             {
                 // If encryption fails, return original (will fail at runtime with clear error)
-                System.Diagnostics.Debug.WriteLine($"Password encryption failed: {ex.Message}");
                 return plainPassword;
             }
         }
@@ -66,20 +65,11 @@ namespace Jellyfin.Plugin.Kindle.Services
 
                 return Encoding.UTF8.GetString(plainBytes);
             }
-            catch (Exception ex)
+            catch
             {
                 // If decryption fails, return empty (better than corrupted password)
-                System.Diagnostics.Debug.WriteLine($"Password decryption failed: {ex.Message}");
                 return string.Empty;
             }
-        }
-
-        /// <summary>
-        /// Check if a password is encrypted
-        /// </summary>
-        public bool IsEncrypted(string password)
-        {
-            return !string.IsNullOrEmpty(password) && password.StartsWith(EncryptionPrefix);
         }
     }
 }

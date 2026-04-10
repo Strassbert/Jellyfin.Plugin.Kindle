@@ -79,23 +79,5 @@ namespace Jellyfin.Plugin.Kindle.Services
                 return Math.Max(0, MaxAttemptsPerMinute - recentAttempts);
             }
         }
-
-        /// <summary>
-        /// Reset rate limit for a user (useful for testing)
-        /// </summary>
-        public void Reset(string userId)
-        {
-            lock (_lockObject)
-            {
-                var keysToRemove = _userAttempts.Keys
-                    .Where(k => k.StartsWith($"{userId}:"))
-                    .ToList();
-
-                foreach (var key in keysToRemove)
-                {
-                    _userAttempts.Remove(key);
-                }
-            }
-        }
     }
 }
