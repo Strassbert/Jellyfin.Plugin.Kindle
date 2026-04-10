@@ -69,7 +69,8 @@ namespace Jellyfin.Plugin.Kindle.Api
         [HttpPost("Send")]
         public async Task<IActionResult> SendToKindle(
             [FromQuery, Required] string itemId,
-            [FromQuery, Required] string userId)
+            [FromQuery, Required] string userId,
+            [FromQuery] string deviceId = null)
         {
             // Rate limiting check (5 attempts per minute, 50 per hour)
             if (!_rateLimiter.IsAllowed(userId, "send"))
@@ -119,21 +120,70 @@ namespace Jellyfin.Plugin.Kindle.Api
                 });
             }
 
-            // User email check
-            if (!_config.UserKindleEmails.TryGetValue(userId, out var kindleEmail) || string.IsNullOrEmpty(kindleEmail))
+            // Determine target email (device-based or legacy)
+            string kindleEmail = null;
+
+            if (!string.IsNullOrEmpty(deviceId))
             {
-                return BadRequest(new
+                // Look up device by ID
+                if (_config.UserDevices.TryGetValue(userId, out var userDevices))
                 {
-                    error = "No E-Book Reader email configured. Please set your E-Book Reader email in user settings.",
-                    errorDe = "Keine E-Book Reader E-Mail hinterlegt. Bitte in den Benutzereinstellungen konfigurieren.",
-                    code = "NO_KINDLE_EMAIL"
-                });
+                    var device = userDevices.FirstOrDefault(d => d.Id == deviceId);
+                    if (device != null && !string.IsNullOrEmpty(device.Email))
+                    {
+                        kindleEmail = device.Email;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(kindleEmail))
+                {
+                    return BadRequest(new
+                    {
+                        error = "Device not found or has no email configured.",
+                        errorDe = "Gerät nicht gefunden oder hat keine E-Mail konfiguriert.",
+                        code = "DEVICE_NOT_FOUND"
+                    });
+                }
+            }
+            else
+            {
+                // Fall back to legacy user email
+                if (!_config.UserKindleEmails.TryGetValue(userId, out kindleEmail) || string.IsNullOrEmpty(kindleEmail))
+                {
+                    return BadRequest(new
+                    {
+                        error = "No E-Book Reader email configured. Please set your E-Book Reader email in user settings.",
+                        errorDe = "Keine E-Book Reader E-Mail hinterlegt. Bitte in den Benutzereinstellungen konfigurieren.",
+                        code = "NO_KINDLE_EMAIL"
+                    });
+                }
             }
 
             try
             {
                 await _mailService.SendBookAsync(kindleEmail, item.Path, item.Name + extension, _config);
-                var fileSizeMb = new System.IO.FileInfo(item.Path).Length / (1024.0 * 1024.0);
+                var fileInfo = new System.IO.FileInfo(item.Path);
+                var fileSizeMb = fileInfo.Length / (1024.0 * 1024.0);
+
+                // Log send history
+                if (_config.EnableSendHistory)
+                {
+                    var sendLog = new SendLog
+                    {
+                        UserId = userId,
+                        ItemId = itemId,
+                        FileName = item.Name + extension,
+                        FileSizeBytes = fileInfo.Length,
+                        RecipientEmail = kindleEmail,
+                        DeviceId = deviceId,
+                        Status = SendStatus.Success,
+                        SentAt = DateTime.UtcNow,
+                        BookTitle = item.Name,
+                        Format = extension.TrimStart('.')
+                    };
+                    _historyService.LogSend(sendLog);
+                }
+
                 _logger.LogInformation(
                     "Book sent successfully - ItemId: {ItemId}, ItemName: {Name}, UserId: {UserId}, Email: {Email}, FileSizeMB: {FileSizeMB}, Timestamp: {Timestamp}",
                     itemId, item.Name, userId, kindleEmail, fileSizeMb, DateTime.UtcNow);
@@ -141,6 +191,27 @@ namespace Jellyfin.Plugin.Kindle.Api
             }
             catch (Exception ex)
             {
+                // Log failed send
+                if (_config.EnableSendHistory)
+                {
+                    var fileInfo = new System.IO.FileInfo(item.Path);
+                    var sendLog = new SendLog
+                    {
+                        UserId = userId,
+                        ItemId = itemId,
+                        FileName = item.Name + extension,
+                        FileSizeBytes = fileInfo.Length,
+                        RecipientEmail = kindleEmail,
+                        DeviceId = deviceId,
+                        Status = SendStatus.Failed,
+                        SentAt = DateTime.UtcNow,
+                        ErrorMessage = ex.Message,
+                        BookTitle = item.Name,
+                        Format = extension.TrimStart('.')
+                    };
+                    _historyService.LogSend(sendLog);
+                }
+
                 _logger.LogError(ex,
                     "Failed to send book - ItemId: {ItemId}, ItemName: {Name}, UserId: {UserId}, Email: {Email}, Exception: {Exception}, Timestamp: {Timestamp}",
                     itemId, item.Name, userId, kindleEmail, ex.Message, DateTime.UtcNow);
