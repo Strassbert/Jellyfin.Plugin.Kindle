@@ -63,7 +63,17 @@
             sentSuccessfully: 'Sent',
             sentFailed: 'Failed',
             sentPending: 'Pending',
-            clearHistory: 'Clear History'
+            clearHistory: 'Clear History',
+            adminDashboard: 'Statistics',
+            totalSends: 'Total Sends',
+            successfulSends: 'Successful',
+            failedSends: 'Failed',
+            successRate: 'Success Rate',
+            uniqueUsers: 'Unique Users',
+            mostActiveUser: 'Most Active User',
+            mostCommonFormat: 'Most Common Format',
+            averageDailyActivity: 'Average Daily',
+            totalDataTransferred: 'Total Data'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -121,7 +131,17 @@
             sentSuccessfully: 'Versendet',
             sentFailed: 'Fehlgeschlagen',
             sentPending: 'Ausstehend',
-            clearHistory: 'Verlauf l\u00f6schen'
+            clearHistory: 'Verlauf l\u00f6schen',
+            adminDashboard: 'Statistiken',
+            totalSends: 'Gesamte Versendungen',
+            successfulSends: 'Erfolgreich',
+            failedSends: 'Fehlgeschlagen',
+            successRate: 'Erfolgsrate',
+            uniqueUsers: 'Eindeutige Benutzer',
+            mostActiveUser: 'Aktivster Benutzer',
+            mostCommonFormat: 'H\u00e4ufigstes Format',
+            averageDailyActivity: 'Durchschnittlich pro Tag',
+            totalDataTransferred: 'Datenvolumen insgesamt'
         }
     };
 
@@ -406,6 +426,22 @@
 
         buttonContainer.appendChild(devicesBtn);
         buttonContainer.appendChild(historyBtn);
+
+        // Add admin dashboard button if user is admin
+        ApiClient.getUser(userId).then(function (user) {
+            if (user.Policy.IsAdministrator) {
+                var adminBtn = document.createElement('button');
+                adminBtn.textContent = t('adminDashboard');
+                adminBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
+                adminBtn.style.cssText = 'border-color:rgba(0,164,220,0.5);';
+                adminBtn.addEventListener('click', function () {
+                    popup.remove();
+                    openAdminDashboard();
+                });
+                buttonContainer.insertBefore(adminBtn, buttonContainer.children[2]);
+            }
+        });
+
         buttonContainer.appendChild(clearBtn);
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(saveBtn);
@@ -1013,5 +1049,102 @@
         var sizes = ['B', 'KB', 'MB', 'GB'];
         var i = Math.floor(Math.log(bytes) / Math.log(k));
         return Math.round((bytes / Math.pow(k, i)) * 10) / 10 + ' ' + sizes[i];
+    }
+
+    // Admin Dashboard Functions
+    function openAdminDashboard() {
+        // Check if user is admin
+        ApiClient.getUser(ApiClient.getCurrentUserId()).then(function (user) {
+            if (!user.Policy.IsAdministrator) {
+                showToast('Admin access required');
+                return;
+            }
+
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10001;display:flex;align-items:center;justify-content:center;';
+
+            var modal = document.createElement('div');
+            modal.style.cssText = 'background:var(--theme-card-background,#1c1c1e);color:var(--theme-text-color,#fff);padding:2em;border-radius:10px;max-width:800px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+            modal.className = 'kindle-admin-modal';
+
+            var title = document.createElement('h2');
+            title.textContent = t('adminDashboard');
+            title.style.cssText = 'margin:0 0 1.5em 0;';
+
+            var statsContainer = document.createElement('div');
+            statsContainer.className = 'kindle-stats-container';
+            statsContainer.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1em;margin-bottom:1.5em;';
+
+            var footer = document.createElement('div');
+            footer.style.cssText = 'display:flex;gap:0.5em;justify-content:flex-end;';
+
+            var closeBtn = document.createElement('button');
+            closeBtn.textContent = t('cancel');
+            closeBtn.style.cssText = 'padding:0.5em 1.2em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:transparent;color:inherit;cursor:pointer;';
+            closeBtn.addEventListener('click', function () {
+                document.body.removeChild(overlay);
+            });
+
+            footer.appendChild(closeBtn);
+
+            modal.appendChild(title);
+            modal.appendChild(statsContainer);
+            modal.appendChild(footer);
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            loadAdminStatistics(statsContainer);
+
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) {
+                    document.body.removeChild(overlay);
+                }
+            });
+        }).catch(function () {
+            showToast('Failed to verify admin status');
+        });
+    }
+
+    function loadAdminStatistics(container) {
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Kindle/Statistics/System'),
+            dataType: 'json'
+        }).then(function (result) {
+            var stats = result.statistics || {};
+            container.innerHTML = '';
+
+            var statCards = [
+                { label: t('totalSends'), value: stats.totalSends || 0 },
+                { label: t('successfulSends'), value: stats.successfulSends || 0 },
+                { label: t('failedSends'), value: stats.failedSends || 0 },
+                { label: t('successRate'), value: (stats.successRate || 0).toFixed(1) + '%' },
+                { label: t('uniqueUsers'), value: stats.uniqueUsers || 0 },
+                { label: t('mostActiveUser'), value: stats.mostActiveUser || 'N/A' },
+                { label: t('mostCommonFormat'), value: stats.mostCommonFormat || 'unknown' },
+                { label: t('averageDailyActivity'), value: (stats.averageDailyActivity || 0).toFixed(1) },
+                { label: t('totalDataTransferred'), value: formatBytes(stats.totalFilesSize || 0) }
+            ];
+
+            statCards.forEach(function (card) {
+                var statCard = document.createElement('div');
+                statCard.style.cssText = 'background:rgba(0,164,220,0.1);border:1px solid rgba(0,164,220,0.3);border-radius:5px;padding:1em;';
+
+                var label = document.createElement('div');
+                label.style.cssText = 'font-size:0.85em;opacity:0.7;margin-bottom:0.5em;';
+                label.textContent = card.label;
+
+                var value = document.createElement('div');
+                value.style.cssText = 'font-size:1.5em;font-weight:bold;color:#00a4dc;word-break:break-word;';
+                value.textContent = card.value;
+
+                statCard.appendChild(label);
+                statCard.appendChild(value);
+                container.appendChild(statCard);
+            });
+        }).catch(function () {
+            container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2em;color:#f44336;">Failed to load statistics</div>';
+        });
     }
 })();
