@@ -16,11 +16,16 @@
             enterEmail: 'Enter your E-Book Reader email address:',
             save: 'Save',
             cancel: 'Cancel',
+            clear: 'Clear',
             emailPlaceholder: 'your-name@kindle.com',
             emailSaved: 'E-Book Reader Email saved.',
+            emailCleared: 'E-Book Reader Email cleared.',
             fileTooLarge: 'File is too large for E-Book Reader (max 50 MB).',
             formatNotSupported: 'This file format is not supported by E-Book Reader.',
-            settingsLink: 'E-Book Reader Settings'
+            settingsTitle: 'E-Book Reader Settings',
+            emailLabel: 'E-Book Reader Email',
+            currentEmail: 'Current Email: {email}',
+            noEmailSet: 'No email configured'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -28,14 +33,19 @@
             sent: 'An E-Book Reader gesendet!',
             errorSending: 'Senden an E-Book Reader fehlgeschlagen.',
             noEmail: 'Keine E-Book Reader E-Mail konfiguriert.',
-            enterEmail: 'Gib deine E-Book ReaderE-Mail-Adresse ein:',
+            enterEmail: 'Gib deine E-Book Reader E-Mail-Adresse ein:',
             save: 'Speichern',
             cancel: 'Abbrechen',
+            clear: 'Löschen',
             emailPlaceholder: 'dein-name@kindle.com',
             emailSaved: 'E-Book Reader E-Mail gespeichert.',
+            emailCleared: 'E-Book Reader E-Mail gelöscht.',
             fileTooLarge: 'Datei ist zu gro\u00df f\u00fcr E-Book Reader (max. 50 MB).',
             formatNotSupported: 'Dieses Dateiformat wird vom E-Book Reader nicht unterst\u00fctzt.',
-            settingsLink: 'E-Book Reader Einstellungen'
+            settingsTitle: 'E-Book Reader Einstellungen',
+            emailLabel: 'E-Book Reader E-Mail',
+            currentEmail: 'Aktuelle E-Mail: {email}',
+            noEmailSet: 'Keine E-Mail konfiguriert'
         }
     };
 
@@ -102,74 +112,246 @@
             });
         });
 
-        // User preferences page: "E-Book Reader Settings" link
-        // Pattern based on Jellyfin Enhanced (jellyfinEnhancedUserPrefsLink)
-        function addPreferencesLink() {
-            var menuContainer = document.querySelector('#myPreferencesMenuPage:not(.hide) .verticalSection');
-            if (!menuContainer) return false;
+        // Header button: "E-Book Reader Settings" in top-right navigation
+        // Uses MutationObserver to watch for .headerRight element
+        setupHeaderButton();
+    }
 
-            // Check if link already exists
-            if (document.querySelector('#kindleUserPrefsLink')) return true;
+    function setupHeaderButton() {
+        var observer = new MutationObserver(function (mutations) {
+            var headerRight = document.querySelector('.headerRight');
+            if (headerRight && !document.querySelector('.kindle-settings-button')) {
+                var button = createHeaderButton();
+                headerRight.prepend(button);
+                console.log('[Kindle] Settings button injected into header.');
+            }
+        });
 
-            // Create the link element matching Jellyfin's structure
-            var link = document.createElement('a');
-            link.id = 'kindleUserPrefsLink';
-            link.setAttribute('is', 'emby-linkbutton');
-            link.setAttribute('data-ripple', 'false');
-            link.href = '#/configurationpage?name=KindleUserSettings';
-            link.className = 'listItem-border emby-button';
-            link.style.display = 'block';
-            link.style.padding = '0';
-            link.style.margin = '0';
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
 
-            link.innerHTML =
-                '<div class="listItem">' +
-                '<span class="material-icons listItemIcon listItemIcon-transparent email" aria-hidden="true"></span>' +
-                '<div class="listItemBody">' +
-                '<div class="listItemBodyText">' + t('settingsLink') + '</div>' +
-                '</div>' +
-                '</div>';
+        // Also try immediately in case header is already present
+        var headerRight = document.querySelector('.headerRight');
+        if (headerRight && !document.querySelector('.kindle-settings-button')) {
+            var button = createHeaderButton();
+            headerRight.prepend(button);
+        }
+    }
 
-            menuContainer.appendChild(link);
-            console.log('[Kindle] Settings link injected into preferences.');
-            return true;
+    function createHeaderButton() {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'paper-icon-button-light headerButton kindle-settings-button';
+        button.title = t('settingsTitle');
+        button.setAttribute('aria-label', t('settingsTitle'));
+
+        // Email icon SVG
+        button.innerHTML = '<span class="material-icons" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;">email</span>';
+        button.style.verticalAlign = 'middle';
+        button.style.cursor = 'pointer';
+
+        button.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleSettingsPopup(button);
+        });
+
+        return button;
+    }
+
+    function toggleSettingsPopup(anchorElement) {
+        var existing = document.querySelector('.kindle-settings-popup');
+        if (existing) {
+            existing.remove();
+        } else {
+            createSettingsPopup(anchorElement);
+        }
+    }
+
+    function createSettingsPopup(anchorElement) {
+        var userId = ApiClient.getCurrentUserId();
+
+        var popup = document.createElement('div');
+        popup.className = 'kindle-settings-popup';
+
+        // Inline styles for popup
+        Object.assign(popup.style, {
+            position: 'fixed',
+            zIndex: '10000',
+            backgroundColor: '#202020',
+            color: '#fff',
+            padding: '1em',
+            borderRadius: '0.3em',
+            boxShadow: '0 0 20px rgba(0,0,0,0.5)',
+            minWidth: '300px',
+            maxWidth: '400px',
+            fontFamily: 'inherit'
+        });
+
+        // Responsive positioning
+        var rect = anchorElement.getBoundingClientRect();
+        var rightPos = window.innerWidth - rect.right;
+
+        if (window.innerWidth < 450 || (window.innerWidth - rightPos) < 320) {
+            popup.style.right = '1rem';
+            popup.style.left = 'auto';
+        } else {
+            popup.style.right = rightPos + 'px';
+            popup.style.left = 'auto';
+        }
+        popup.style.top = (rect.bottom + 10) + 'px';
+
+        // Fetch current email
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId }),
+            dataType: 'json'
+        }).then(function (result) {
+            var currentEmail = result.email || '';
+            populatePopup(popup, currentEmail, userId);
+        }).catch(function () {
+            populatePopup(popup, '', userId);
+        });
+
+        document.body.appendChild(popup);
+
+        // Close popup when clicking outside
+        var closeHandler = function (e) {
+            if (!popup.contains(e.target) &&
+                e.target !== anchorElement &&
+                !anchorElement.contains(e.target)) {
+                popup.remove();
+                document.removeEventListener('click', closeHandler);
+            }
+        };
+        setTimeout(function () {
+            document.addEventListener('click', closeHandler);
+        }, 0);
+    }
+
+    function populatePopup(popup, currentEmail, userId) {
+        var emailInput = document.createElement('input');
+        emailInput.type = 'email';
+        emailInput.placeholder = t('emailPlaceholder');
+        emailInput.value = currentEmail;
+
+        Object.assign(emailInput.style, {
+            width: '100%',
+            padding: '0.6em',
+            marginBottom: '1em',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '5px',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            color: '#fff',
+            fontSize: '1em',
+            boxSizing: 'border-box'
+        });
+
+        var currentEmailDisplay = document.createElement('div');
+        currentEmailDisplay.style.cssText = 'margin-bottom:1em;padding:0.5em;background:rgba(255,255,255,0.05);border-radius:3px;font-size:0.9em;opacity:0.8;';
+        if (currentEmail) {
+            currentEmailDisplay.textContent = t('currentEmail').replace('{email}', currentEmail);
+        } else {
+            currentEmailDisplay.textContent = t('noEmailSet');
         }
 
-        var prefsCheckInterval = null;
+        var buttonContainer = document.createElement('div');
+        Object.assign(buttonContainer.style, {
+            display: 'flex',
+            gap: '0.5em',
+            justifyContent: 'flex-end'
+        });
 
-        function checkPreferencesPage() {
-            var hash = window.location.hash;
-            if (hash.indexOf('/mypreferencesmenu') === -1) {
-                // Not on preferences page - stop polling
-                if (prefsCheckInterval) {
-                    clearInterval(prefsCheckInterval);
-                    prefsCheckInterval = null;
-                }
+        var saveBtn = document.createElement('button');
+        saveBtn.textContent = t('save');
+        Object.assign(saveBtn.style, {
+            padding: '0.5em 1.2em',
+            border: 'none',
+            borderRadius: '5px',
+            backgroundColor: '#00a4dc',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '1em'
+        });
+
+        var clearBtn = document.createElement('button');
+        clearBtn.textContent = t('clear');
+        Object.assign(clearBtn.style, {
+            padding: '0.5em 1.2em',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '5px',
+            backgroundColor: 'transparent',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '1em'
+        });
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.textContent = t('cancel');
+        Object.assign(cancelBtn.style, {
+            padding: '0.5em 1.2em',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '5px',
+            backgroundColor: 'transparent',
+            color: '#fff',
+            cursor: 'pointer',
+            fontSize: '1em'
+        });
+
+        buttonContainer.appendChild(clearBtn);
+        buttonContainer.appendChild(cancelBtn);
+        buttonContainer.appendChild(saveBtn);
+
+        popup.appendChild(emailInput);
+        popup.appendChild(currentEmailDisplay);
+        popup.appendChild(buttonContainer);
+
+        emailInput.focus();
+
+        saveBtn.addEventListener('click', function () {
+            var email = emailInput.value.trim();
+            if (!email || !email.includes('@')) {
+                emailInput.style.borderColor = '#f44336';
                 return;
             }
 
-            // Try to add immediately
-            addPreferencesLink();
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId, email: email })
+            }).then(function () {
+                popup.remove();
+                showToast(t('emailSaved'));
+            }).catch(function () {
+                emailInput.style.borderColor = '#f44336';
+            });
+        });
 
-            // Keep polling while on preferences page.
-            // Other plugins (e.g. Jellyfin Enhanced) can trigger React re-renders
-            // that discard our manually appended link. Continuous polling re-injects it.
-            if (!prefsCheckInterval) {
-                prefsCheckInterval = setInterval(function () {
-                    if (window.location.hash.indexOf('/mypreferencesmenu') === -1) {
-                        clearInterval(prefsCheckInterval);
-                        prefsCheckInterval = null;
-                        return;
-                    }
-                    addPreferencesLink();
-                }, 500);
+        clearBtn.addEventListener('click', function () {
+            ApiClient.ajax({
+                type: 'DELETE',
+                url: ApiClient.getUrl('Kindle/UserEmail', { userId: userId })
+            }).then(function () {
+                popup.remove();
+                showToast(t('emailCleared'));
+            }).catch(function () {
+                showToast('Failed to clear email.');
+            });
+        });
+
+        cancelBtn.addEventListener('click', function () {
+            popup.remove();
+        });
+
+        emailInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveBtn.click();
             }
-        }
-
-        window.addEventListener('hashchange', checkPreferencesPage);
-        // Also listen for viewshow (Jellyfin's SPA view event)
-        document.addEventListener('viewshow', checkPreferencesPage);
-        checkPreferencesPage();
+            if (e.key === 'Escape') {
+                popup.remove();
+            }
+        });
     }
 
     function renderButton(item) {
