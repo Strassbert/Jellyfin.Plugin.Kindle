@@ -37,7 +37,21 @@
             helpText2: ' > Settings > Personal Document Settings.',
             helpText3: 'Only approved email addresses can send files to your Kindle library. Before sending, make sure the account you will use is listed in your ',
             helpLink2: 'Email List for Approved Personal Document',
-            helpText4: ' in your Personal Document Settings.'
+            helpText4: ' in your Personal Document Settings.',
+            manageDevices: 'Manage Devices',
+            devices: 'Devices',
+            deviceName: 'Device Name',
+            deviceEmail: 'Email Address',
+            preferredFormat: 'Preferred Format',
+            setAsDefault: 'Set as Default',
+            removeDevice: 'Remove',
+            addDevice: 'Add Device',
+            editDevice: 'Edit',
+            defaultDevice: 'Default',
+            noDevices: 'No devices configured yet.',
+            deviceAdded: 'Device added successfully.',
+            deviceUpdated: 'Device updated successfully.',
+            deviceRemoved: 'Device removed successfully.'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -69,7 +83,21 @@
             helpText2: ' > Einstellungen > Pers\u00f6nliche Dokumente Einstellungen.',
             helpText3: 'Nur genehmigte E-Mail-Adressen k\u00f6nnen Dateien an deine Kindle-Bibliothek senden. Vergewissere dich vor dem Senden, dass das Konto, das du verwenden wirst, in deiner ',
             helpLink2: 'E-Mail-Liste f\u00fcr genehmigte pers\u00f6nliche Dokumente',
-            helpText4: ' in deinen Einstellungen f\u00fcr pers\u00f6nliche Dokumente aufgef\u00fchrt ist.'
+            helpText4: ' in deinen Einstellungen f\u00fcr pers\u00f6nliche Dokumente aufgef\u00fchrt ist.',
+            manageDevices: 'Ger\u00e4te verwalten',
+            devices: 'Ger\u00e4te',
+            deviceName: 'Ger\u00e4tename',
+            deviceEmail: 'E-Mail-Adresse',
+            preferredFormat: 'Bevorzugtes Format',
+            setAsDefault: 'Als Standard festlegen',
+            removeDevice: 'Entfernen',
+            addDevice: 'Ger\u00e4t hinzuf\u00fcgen',
+            editDevice: 'Bearbeiten',
+            defaultDevice: 'Standard',
+            noDevices: 'Noch keine Ger\u00e4te konfiguriert.',
+            deviceAdded: 'Ger\u00e4t erfolgreich hinzugef\u00fcgt.',
+            deviceUpdated: 'Ger\u00e4t erfolgreich aktualisiert.',
+            deviceRemoved: 'Ger\u00e4t erfolgreich entfernt.'
         }
     };
 
@@ -336,6 +364,15 @@
         cancelBtn.textContent = t('cancel');
         cancelBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
 
+        var devicesBtn = document.createElement('button');
+        devicesBtn.textContent = t('manageDevices');
+        devicesBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
+        devicesBtn.addEventListener('click', function () {
+            popup.remove();
+            openDeviceManagement(userId);
+        });
+
+        buttonContainer.appendChild(devicesBtn);
         buttonContainer.appendChild(clearBtn);
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(saveBtn);
@@ -585,5 +622,216 @@
                 document.body.removeChild(overlay);
             }
         });
+    }
+
+    // Device Management Functions
+    function openDeviceManagement(userId) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10001;display:flex;align-items:center;justify-content:center;';
+
+        var modal = document.createElement('div');
+        modal.style.cssText = 'background:var(--theme-card-background,#1c1c1e);color:var(--theme-text-color,#fff);padding:2em;border-radius:10px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+        modal.className = 'kindle-device-modal';
+
+        var title = document.createElement('h2');
+        title.textContent = t('devices');
+        title.style.cssText = 'margin:0 0 1em 0;';
+
+        var deviceList = document.createElement('div');
+        deviceList.className = 'kindle-device-list';
+        deviceList.style.cssText = 'margin-bottom:1em;';
+
+        var footer = document.createElement('div');
+        footer.style.cssText = 'display:flex;gap:0.5em;justify-content:flex-end;margin-top:1.5em;';
+
+        var addBtn = document.createElement('button');
+        addBtn.textContent = t('addDevice');
+        addBtn.style.cssText = 'padding:0.5em 1.2em;border:none;border-radius:5px;background:var(--theme-primary-color,#00a4dc);color:#fff;cursor:pointer;';
+        addBtn.addEventListener('click', function () {
+            openAddDeviceDialog(userId, overlay, deviceList);
+        });
+
+        var closeBtn = document.createElement('button');
+        closeBtn.textContent = t('cancel');
+        closeBtn.style.cssText = 'padding:0.5em 1.2em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:transparent;color:inherit;cursor:pointer;';
+        closeBtn.addEventListener('click', function () {
+            document.body.removeChild(overlay);
+        });
+
+        footer.appendChild(addBtn);
+        footer.appendChild(closeBtn);
+
+        modal.appendChild(title);
+        modal.appendChild(deviceList);
+        modal.appendChild(footer);
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Load devices
+        loadDevices(userId, deviceList);
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    function loadDevices(userId, container) {
+        ApiClient.ajax({
+            type: 'GET',
+            url: ApiClient.getUrl('Kindle/Devices', { userId: userId }),
+            dataType: 'json'
+        }).then(function (result) {
+            var devices = result.devices || [];
+            container.innerHTML = '';
+
+            if (devices.length === 0) {
+                var emptyMsg = document.createElement('div');
+                emptyMsg.style.cssText = 'text-align:center;padding:2em;opacity:0.6;';
+                emptyMsg.textContent = t('noDevices');
+                container.appendChild(emptyMsg);
+                return;
+            }
+
+            devices.forEach(function (device) {
+                var deviceItem = document.createElement('div');
+                deviceItem.className = 'kindle-device-item';
+                deviceItem.style.cssText = 'border:1px solid rgba(255,255,255,0.2);border-radius:5px;padding:1em;margin-bottom:0.8em;background:rgba(255,255,255,0.02);';
+
+                var deviceHeader = document.createElement('div');
+                deviceHeader.style.cssText = 'display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5em;';
+
+                var deviceNameSpan = document.createElement('span');
+                deviceNameSpan.style.cssText = 'font-weight:bold;font-size:1em;';
+                deviceNameSpan.textContent = device.deviceName;
+
+                if (device.isDefault) {
+                    var defaultBadge = document.createElement('span');
+                    defaultBadge.style.cssText = 'background:var(--theme-primary-color,#00a4dc);color:#fff;padding:0.2em 0.6em;border-radius:3px;font-size:0.8em;';
+                    defaultBadge.textContent = t('defaultDevice');
+                    deviceHeader.appendChild(defaultBadge);
+                }
+
+                var actions = document.createElement('div');
+                actions.style.cssText = 'display:flex;gap:0.3em;';
+
+                var editBtn = document.createElement('button');
+                editBtn.textContent = t('editDevice');
+                editBtn.style.cssText = 'padding:0.3em 0.8em;border:1px solid rgba(255,255,255,0.2);border-radius:3px;background:transparent;color:inherit;cursor:pointer;font-size:0.85em;';
+                editBtn.addEventListener('click', function () {
+                    // Edit functionality would go here
+                });
+
+                var deleteBtn = document.createElement('button');
+                deleteBtn.textContent = t('removeDevice');
+                deleteBtn.style.cssText = 'padding:0.3em 0.8em;border:1px solid rgba(244,67,54,0.4);border-radius:3px;background:transparent;color:#f44336;cursor:pointer;font-size:0.85em;';
+                deleteBtn.addEventListener('click', function () {
+                    deleteDevice(userId, device.id, container);
+                });
+
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+                deviceHeader.appendChild(deviceNameSpan);
+                deviceHeader.appendChild(actions);
+
+                var deviceEmail = document.createElement('div');
+                deviceEmail.style.cssText = 'font-size:0.9em;opacity:0.8;margin-bottom:0.3em;';
+                deviceEmail.textContent = t('deviceEmail') + ': ' + device.email;
+
+                var deviceFormat = document.createElement('div');
+                deviceFormat.style.cssText = 'font-size:0.9em;opacity:0.8;';
+                deviceFormat.textContent = t('preferredFormat') + ': ' + (device.preferredFormat || 'epub');
+
+                deviceItem.appendChild(deviceHeader);
+                deviceItem.appendChild(deviceEmail);
+                deviceItem.appendChild(deviceFormat);
+
+                container.appendChild(deviceItem);
+            });
+        }).catch(function () {
+            container.innerHTML = '<div style="text-align:center;padding:2em;color:#f44336;">Failed to load devices</div>';
+        });
+    }
+
+    function openAddDeviceDialog(userId, parentOverlay, deviceList) {
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10002;display:flex;align-items:center;justify-content:center;';
+
+        var dialog = document.createElement('div');
+        dialog.style.cssText = 'background:var(--theme-card-background,#1c1c1e);color:var(--theme-text-color,#fff);padding:1.5em 2em;border-radius:10px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.5);';
+
+        dialog.innerHTML =
+            '<h3 style="margin:0 0 1em;">' + t('addDevice') + '</h3>' +
+            '<input type="text" id="deviceName" placeholder="' + t('deviceName') + '" style="width:100%;padding:0.6em;margin-bottom:0.5em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:rgba(255,255,255,0.1);color:inherit;font-size:1em;box-sizing:border-box;" />' +
+            '<input type="email" id="deviceEmail" placeholder="' + t('deviceEmail') + '" style="width:100%;padding:0.6em;margin-bottom:0.5em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:rgba(255,255,255,0.1);color:inherit;font-size:1em;box-sizing:border-box;" />' +
+            '<select id="deviceFormat" style="width:100%;padding:0.6em;margin-bottom:1em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:rgba(255,255,255,0.1);color:inherit;font-size:1em;box-sizing:border-box;"><option value="epub">EPUB</option><option value="pdf">PDF</option><option value="mobi">MOBI</option><option value="azw">AZW</option></select>' +
+            '<div style="display:flex;gap:0.5em;justify-content:flex-end;">' +
+            '<button id="addDialogCancel" style="padding:0.5em 1.2em;border:1px solid rgba(255,255,255,0.2);border-radius:5px;background:transparent;color:inherit;cursor:pointer;">' + t('cancel') + '</button>' +
+            '<button id="addDialogSave" style="padding:0.5em 1.2em;border:none;border-radius:5px;background:var(--theme-primary-color,#00a4dc);color:#fff;cursor:pointer;">' + t('save') + '</button>' +
+            '</div>';
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        var nameInput = dialog.querySelector('#deviceName');
+        var emailInput = dialog.querySelector('#deviceEmail');
+        var formatSelect = dialog.querySelector('#deviceFormat');
+
+        nameInput.focus();
+
+        dialog.querySelector('#addDialogCancel').addEventListener('click', function () {
+            document.body.removeChild(overlay);
+        });
+
+        dialog.querySelector('#addDialogSave').addEventListener('click', function () {
+            var deviceName = nameInput.value.trim();
+            var deviceEmail = emailInput.value.trim();
+            var format = formatSelect.value;
+
+            if (!deviceName || !deviceEmail || !isValidEmail(deviceEmail)) {
+                if (!deviceName) nameInput.style.borderColor = '#f44336';
+                if (!deviceEmail) emailInput.style.borderColor = '#f44336';
+                return;
+            }
+
+            ApiClient.ajax({
+                type: 'POST',
+                url: ApiClient.getUrl('Kindle/Devices', { userId: userId }),
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    deviceName: deviceName,
+                    email: deviceEmail,
+                    preferredFormat: format
+                })
+            }).then(function () {
+                document.body.removeChild(overlay);
+                showToast(t('deviceAdded'));
+                loadDevices(userId, deviceList);
+            }).catch(function () {
+                showToast('Failed to add device.');
+            });
+        });
+
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+            }
+        });
+    }
+
+    function deleteDevice(userId, deviceId, deviceList) {
+        if (confirm('Are you sure you want to remove this device?')) {
+            ApiClient.ajax({
+                type: 'DELETE',
+                url: ApiClient.getUrl('Kindle/Devices/' + deviceId, { userId: userId })
+            }).then(function () {
+                showToast(t('deviceRemoved'));
+                loadDevices(userId, deviceList);
+            }).catch(function () {
+                showToast('Failed to remove device.');
+            });
+        }
     }
 })();
