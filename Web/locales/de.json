@@ -1,0 +1,43 @@
+{
+  "header": {
+    "settingsTitle": "E-Book Reader Einstellungen"
+  },
+  "buttons": {
+    "send": "An E-Book Reader senden",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "clear": "Löschen",
+    "help": "Hilfe"
+  },
+  "labels": {
+    "email": "E-Book Reader E-Mail",
+    "enterEmail": "Gib deine E-Book Reader E-Mail-Adresse ein:"
+  },
+  "placeholders": {
+    "email": "dein-name@kindle.com"
+  },
+  "messages": {
+    "sent": "An E-Book Reader gesendet!",
+    "sending": "Wird gesendet...",
+    "emailSaved": "E-Book Reader E-Mail gespeichert.",
+    "emailCleared": "E-Book Reader E-Mail gelöscht.",
+    "errorSending": "Senden an E-Book Reader fehlgeschlagen.",
+    "noEmail": "Keine E-Book Reader E-Mail konfiguriert.",
+    "fileTooLarge": "Datei ist zu groß für E-Book Reader (max. 50 MB).",
+    "formatNotSupported": "Dieses Dateiformat wird vom E-Book Reader nicht unterstützt."
+  },
+  "settings": {
+    "title": "E-Book Reader Einstellungen",
+    "currentEmail": "Aktuelle E-Mail: {email}",
+    "noEmailSet": "Keine E-Mail konfiguriert"
+  },
+  "help": {
+    "title": "Beispiel Kindle",
+    "text1": "Um deine für Send to Kindle verwendete E-Mail-Adresse zu finden, wähle ",
+    "link1": "Meine Inhalte und Geräte verwalten",
+    "text2": " > Einstellungen > Persönliche Dokumente Einstellungen.",
+    "text3": "Nur genehmigte E-Mail-Adressen können Dateien an deine Kindle-Bibliothek senden. Vergewissere dich vor dem Senden, dass das Konto, das du verwenden wirst, in deiner ",
+    "link2": "E-Mail-Liste für genehmigte persönliche Dokumente",
+    "text4": " in deinen Einstellungen für persönliche Dokumente aufgeführt ist."
+  }
+}

@@ -1,0 +1,195 @@
+/* Jellyfin Kindle Plugin - Styles for Settings Popup */
+
+.kindle-settings-popup {
+    position: fixed;
+    z-index: 10000;
+    background-color: #202020;
+    color: #fff;
+    padding: 1em;
+    border-radius: 0.3em;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    min-width: 300px;
+    max-width: 400px;
+    font-family: inherit;
+}
+
+.kindle-popup-input {
+    width: 100%;
+    padding: 0.6em;
+    margin-bottom: 1em;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.kindle-popup-input:focus {
+    outline: none;
+    border-color: #00a4dc;
+    background-color: rgba(0, 164, 220, 0.1);
+}
+
+.kindle-popup-input.error {
+    border-color: #f44336;
+    background-color: rgba(244, 67, 54, 0.1);
+}
+
+.kindle-popup-email-display {
+    margin-bottom: 1em;
+    padding: 0.5em;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    font-size: 0.9em;
+    opacity: 0.8;
+}
+
+.kindle-popup-buttons {
+    display: flex;
+    gap: 0.5em;
+    justify-content: flex-end;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+}
+
+.kindle-popup-button {
+    padding: 0.5em 1.2em;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.kindle-popup-button-save {
+    border: none;
+    background-color: #00a4dc;
+    color: #fff;
+}
+
+.kindle-popup-button-save:hover {
+    background-color: #0088b8;
+    transform: translateY(-1px);
+}
+
+.kindle-popup-button-save:active {
+    transform: translateY(0);
+}
+
+.kindle-popup-button-secondary {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: transparent;
+    color: #fff;
+}
+
+.kindle-popup-button-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.kindle-popup-help-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1em;
+    margin-top: 1em;
+}
+
+.kindle-popup-help-summary {
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.kindle-popup-help-summary:hover {
+    opacity: 0.8;
+}
+
+.kindle-popup-help-icon {
+    display: inline-block;
+    width: 1em;
+    text-align: center;
+}
+
+.kindle-popup-help-content {
+    margin-top: 0.8em;
+    font-size: 0.85em;
+    opacity: 0.85;
+    line-height: 1.5;
+}
+
+.kindle-popup-help-content p {
+    margin: 0.5em 0;
+}
+
+.kindle-popup-help-content a {
+    color: #00a4dc;
+    text-decoration: underline;
+}
+
+.kindle-popup-help-content a:hover {
+    opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 450px) {
+    .kindle-settings-popup {
+        min-width: auto;
+        max-width: none;
+        left: 1rem !important;
+        right: 1rem !important;
+        width: auto;
+    }
+
+    .kindle-popup-buttons {
+        flex-direction: column;
+    }
+
+    .kindle-popup-button {
+        width: 100%;
+    }
+}
+
+/* Dark mode adjustments (already dark, but for consistency) */
+@media (prefers-color-scheme: dark) {
+    .kindle-settings-popup {
+        background-color: #202020;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    /* If Jellyfin ever switches to light theme */
+    .kindle-settings-popup {
+        background-color: #f5f5f5;
+        color: #000;
+    }
+
+    .kindle-popup-input {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #000;
+        border-color: rgba(0, 0, 0, 0.2);
+    }
+
+    .kindle-popup-email-display {
+        background-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .kindle-popup-help-content a {
+        color: #0066cc;
+    }
+}
+
+/* Accessibility - focus visible */
+.kindle-popup-button:focus-visible {
+    outline: 2px solid #00a4dc;
+    outline-offset: 2px;
+}
+
+.kindle-popup-help-summary:focus-visible {
+    outline: 2px solid #00a4dc;
+    outline-offset: 2px;
+}

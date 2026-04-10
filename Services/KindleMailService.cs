@@ -12,11 +12,15 @@ namespace Jellyfin.Plugin.Kindle.Services
     public class KindleMailService
     {
         private readonly ILogger<KindleMailService> _logger;
+        private readonly KindleSecurityService _securityService;
         private static readonly TimeSpan SmtpTimeout = TimeSpan.FromSeconds(30);
 
-        public KindleMailService(ILogger<KindleMailService> logger)
+        public KindleMailService(
+            ILogger<KindleMailService> logger,
+            KindleSecurityService securityService)
         {
             _logger = logger;
+            _securityService = securityService;
         }
 
         public async Task SendBookAsync(
@@ -55,7 +59,9 @@ namespace Jellyfin.Plugin.Kindle.Services
                 }
                 else
                 {
-                    await client.AuthenticateAsync(config.SmtpUser, config.SmtpPassword, cancellationToken);
+                    // Decrypt password if encrypted, otherwise use as-is (backward compatibility)
+                    var password = _securityService.DecryptPassword(config.SmtpPassword);
+                    await client.AuthenticateAsync(config.SmtpUser, password, cancellationToken);
                 }
 
                 await client.SendAsync(message, cancellationToken);
@@ -75,9 +81,11 @@ namespace Jellyfin.Plugin.Kindle.Services
             }
         }
 
-        private static async Task AuthenticateOAuth2Async(SmtpClient client, PluginConfiguration config, CancellationToken cancellationToken)
+        private async Task AuthenticateOAuth2Async(SmtpClient client, PluginConfiguration config, CancellationToken cancellationToken)
         {
-            var oauth2 = new SaslMechanismOAuth2(config.SmtpUser, config.OAuthRefreshToken);
+            // Decrypt token if encrypted, otherwise use as-is (backward compatibility)
+            var token = _securityService.DecryptPassword(config.OAuthRefreshToken);
+            var oauth2 = new SaslMechanismOAuth2(config.SmtpUser, token);
             await client.AuthenticateAsync(oauth2, cancellationToken);
         }
     }

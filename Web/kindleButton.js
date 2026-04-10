@@ -114,10 +114,22 @@
         }, 250);
     }
 
+    // Load CSS stylesheet
+    function loadStylesheet() {
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/KindlePlugin/ClientStyles';
+        document.head.appendChild(link);
+    }
+
     // Wait for DOM
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initPlugin);
+        document.addEventListener('DOMContentLoaded', function () {
+            loadStylesheet();
+            initPlugin();
+        });
     } else {
+        loadStylesheet();
         initPlugin();
     }
 
@@ -207,21 +219,7 @@
         var popup = document.createElement('div');
         popup.className = 'kindle-settings-popup';
 
-        // Inline styles for popup
-        Object.assign(popup.style, {
-            position: 'fixed',
-            zIndex: '10000',
-            backgroundColor: '#202020',
-            color: '#fff',
-            padding: '1em',
-            borderRadius: '0.3em',
-            boxShadow: '0 0 20px rgba(0,0,0,0.5)',
-            minWidth: '300px',
-            maxWidth: '400px',
-            fontFamily: 'inherit'
-        });
-
-        // Responsive positioning
+        // Responsive positioning (CSS handles most styling via classes)
         var rect = anchorElement.getBoundingClientRect();
         var rightPos = window.innerWidth - rect.right;
 
@@ -269,23 +267,12 @@
     function populatePopup(popup, currentEmail, userId) {
         var emailInput = document.createElement('input');
         emailInput.type = 'email';
+        emailInput.className = 'kindle-popup-input';
         emailInput.placeholder = t('emailPlaceholder');
         emailInput.value = currentEmail;
 
-        Object.assign(emailInput.style, {
-            width: '100%',
-            padding: '0.6em',
-            marginBottom: '1em',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: '5px',
-            backgroundColor: 'rgba(255,255,255,0.05)',
-            color: '#fff',
-            fontSize: '1em',
-            boxSizing: 'border-box'
-        });
-
         var currentEmailDisplay = document.createElement('div');
-        currentEmailDisplay.style.cssText = 'margin-bottom:1em;padding:0.5em;background:rgba(255,255,255,0.05);border-radius:3px;font-size:0.9em;opacity:0.8;';
+        currentEmailDisplay.className = 'kindle-popup-email-display';
         if (currentEmail) {
             currentEmailDisplay.textContent = t('currentEmail').replace('{email}', currentEmail);
         } else {
@@ -293,48 +280,19 @@
         }
 
         var buttonContainer = document.createElement('div');
-        Object.assign(buttonContainer.style, {
-            display: 'flex',
-            gap: '0.5em',
-            justifyContent: 'flex-end',
-            marginBottom: '1em'
-        });
+        buttonContainer.className = 'kindle-popup-buttons';
 
         var saveBtn = document.createElement('button');
         saveBtn.textContent = t('save');
-        Object.assign(saveBtn.style, {
-            padding: '0.5em 1.2em',
-            border: 'none',
-            borderRadius: '5px',
-            backgroundColor: '#00a4dc',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '1em'
-        });
+        saveBtn.className = 'kindle-popup-button kindle-popup-button-save';
 
         var clearBtn = document.createElement('button');
         clearBtn.textContent = t('clear');
-        Object.assign(clearBtn.style, {
-            padding: '0.5em 1.2em',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: '5px',
-            backgroundColor: 'transparent',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '1em'
-        });
+        clearBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
 
         var cancelBtn = document.createElement('button');
         cancelBtn.textContent = t('cancel');
-        Object.assign(cancelBtn.style, {
-            padding: '0.5em 1.2em',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: '5px',
-            backgroundColor: 'transparent',
-            color: '#fff',
-            cursor: 'pointer',
-            fontSize: '1em'
-        });
+        cancelBtn.className = 'kindle-popup-button kindle-popup-button-secondary';
 
         buttonContainer.appendChild(clearBtn);
         buttonContainer.appendChild(cancelBtn);
@@ -342,15 +300,19 @@
 
         // Help section (collapsible)
         var helpSection = document.createElement('div');
-        helpSection.style.cssText = 'border-top:1px solid rgba(255,255,255,0.1);padding-top:1em;margin-top:1em;';
+        helpSection.className = 'kindle-popup-help-section';
 
         var helpSummary = document.createElement('div');
-        helpSummary.style.cssText = 'cursor:pointer;font-weight:bold;user-select:none;display:flex;align-items:center;gap:0.5em;';
-        helpSummary.innerHTML = '<span style="display:inline-block;">▸</span> ' + t('helpTitle');
+        helpSummary.className = 'kindle-popup-help-summary';
+        var helpIcon = document.createElement('span');
+        helpIcon.className = 'kindle-popup-help-icon';
+        helpIcon.textContent = '▸';
+        helpSummary.appendChild(helpIcon);
+        helpSummary.appendChild(document.createTextNode(t('helpTitle')));
 
         var helpContent = document.createElement('div');
+        helpContent.className = 'kindle-popup-help-content';
         helpContent.style.display = 'none';
-        helpContent.style.cssText = 'margin-top:0.8em;font-size:0.85em;opacity:0.85;line-height:1.5;';
 
         var lang = getLang();
         var helpLink1Href = lang === 'de'

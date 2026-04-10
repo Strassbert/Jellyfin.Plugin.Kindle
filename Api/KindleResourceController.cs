@@ -23,5 +23,20 @@ namespace Jellyfin.Plugin.Kindle.Api
 
             return File(stream, "application/javascript");
         }
+
+        [HttpGet("ClientStyles")]
+        [Produces("text/css")]
+        public ActionResult GetClientStyles()
+        {
+            var stream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("Jellyfin.Plugin.Kindle.Web.kindleButton.css");
+
+            if (stream == null)
+            {
+                return NotFound();
+            }
+
+            return File(stream, "text/css");
+        }
     }
 }

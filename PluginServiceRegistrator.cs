@@ -37,6 +37,12 @@ namespace Jellyfin.Plugin.Kindle
             // Register KindleMailService with PluginConfiguration injected
             serviceCollection.AddSingleton<KindleMailService>();
 
+            // Register Rate Limiting Service
+            serviceCollection.AddSingleton<RateLimitingService>();
+
+            // Register Security Service for password encryption
+            serviceCollection.AddSingleton<KindleSecurityService>();
+
             // Register Startup filter for middleware
             serviceCollection.AddTransient<IStartupFilter, PluginStartup>();
         }

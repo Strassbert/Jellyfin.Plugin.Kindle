@@ -1,0 +1,43 @@
+{
+  "header": {
+    "settingsTitle": "E-Book Reader Settings"
+  },
+  "buttons": {
+    "send": "Send to E-Book Reader",
+    "save": "Save",
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "help": "Help"
+  },
+  "labels": {
+    "email": "E-Book Reader Email",
+    "enterEmail": "Enter your E-Book Reader email address:"
+  },
+  "placeholders": {
+    "email": "your-name@kindle.com"
+  },
+  "messages": {
+    "sent": "Sent to E-Book Reader!",
+    "sending": "Sending...",
+    "emailSaved": "E-Book Reader Email saved.",
+    "emailCleared": "E-Book Reader Email cleared.",
+    "errorSending": "Failed to send to E-Book Reader.",
+    "noEmail": "No E-Book Reader email configured.",
+    "fileTooLarge": "File is too large for E-Book Reader (max 50 MB).",
+    "formatNotSupported": "This file format is not supported by E-Book Reader."
+  },
+  "settings": {
+    "title": "E-Book Reader Settings",
+    "currentEmail": "Current Email: {email}",
+    "noEmailSet": "No email configured"
+  },
+  "help": {
+    "title": "Example Kindle",
+    "text1": "To find your Send to Kindle email address, go to ",
+    "link1": "Manage Your Content and Devices",
+    "text2": " > Settings > Personal Document Settings.",
+    "text3": "Only approved email addresses can send files to your Kindle library. Before sending, make sure the account you will use is listed in your ",
+    "link2": "Email List for Approved Personal Document",
+    "text4": " in your Personal Document Settings."
+  }
+}
