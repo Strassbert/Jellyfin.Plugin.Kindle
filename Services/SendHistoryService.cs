@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Jellyfin.Plugin.Kindle.Configuration;
 using Jellyfin.Plugin.Kindle.Models;
 using Microsoft.Extensions.Logging;
@@ -178,14 +179,31 @@ namespace Jellyfin.Plugin.Kindle.Services
     /// </summary>
     public class SystemStatistics
     {
+        [JsonPropertyName("totalSends")]
         public int TotalSends { get; set; }
+
+        [JsonPropertyName("successfulSends")]
         public int SuccessfulSends { get; set; }
+
+        [JsonPropertyName("failedSends")]
         public int FailedSends { get; set; }
+
+        [JsonPropertyName("totalFilesSize")]
         public long TotalFilesSize { get; set; }
+
+        [JsonPropertyName("uniqueUsers")]
         public int UniqueUsers { get; set; }
+
+        [JsonPropertyName("mostActiveUser")]
         public string MostActiveUser { get; set; }
+
+        [JsonPropertyName("mostCommonFormat")]
         public string MostCommonFormat { get; set; }
+
+        [JsonPropertyName("averageDailyActivity")]
         public double AverageDailyActivity { get; set; }
+
+        [JsonPropertyName("successRate")]
         public double SuccessRate { get; set; }
     }
 
@@ -194,14 +212,31 @@ namespace Jellyfin.Plugin.Kindle.Services
     /// </summary>
     public class UserStatistics
     {
+        [JsonPropertyName("userId")]
         public string UserId { get; set; }
+
+        [JsonPropertyName("totalSends")]
         public int TotalSends { get; set; }
+
+        [JsonPropertyName("successfulSends")]
         public int SuccessfulSends { get; set; }
+
+        [JsonPropertyName("failedSends")]
         public int FailedSends { get; set; }
+
+        [JsonPropertyName("totalFilesSize")]
         public long TotalFilesSize { get; set; }
+
+        [JsonPropertyName("lastSendAt")]
         public DateTime? LastSendAt { get; set; }
+
+        [JsonPropertyName("lastSentTo")]
         public string LastSentTo { get; set; }
+
+        [JsonPropertyName("successRate")]
         public double SuccessRate { get; set; }
+
+        [JsonPropertyName("favoriteFormat")]
         public string FavoriteFormat { get; set; }
     }
 }

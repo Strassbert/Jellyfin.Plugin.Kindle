@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Kindle.Configuration;
 using Jellyfin.Plugin.Kindle.Models;
@@ -290,6 +291,15 @@ namespace Jellyfin.Plugin.Kindle.Api
                 return BadRequest(new { error = "Multiple devices feature is disabled." });
             }
 
+            // Verify user is accessing only their own devices
+            var authUserId = HttpContext.User.FindFirst("sub")?.Value ??
+                            HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(authUserId) || authUserId != userId)
+            {
+                return Unauthorized(new { error = "You can only access your own devices." });
+            }
+
             var devices = _config.UserDevices.TryGetValue(userId, out var userDevices)
                 ? userDevices.Where(d => d.IsActive).ToList()
                 : new List<UserDevice>();
@@ -306,6 +316,15 @@ namespace Jellyfin.Plugin.Kindle.Api
             if (!_config.EnableMultipleDevices)
             {
                 return BadRequest(new { error = "Multiple devices feature is disabled." });
+            }
+
+            // Verify user is adding devices only for themselves
+            var authUserId = HttpContext.User.FindFirst("sub")?.Value ??
+                            HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(authUserId) || authUserId != userId)
+            {
+                return Unauthorized(new { error = "You can only add devices for your own account." });
             }
 
             if (string.IsNullOrWhiteSpace(request.DeviceName) || string.IsNullOrWhiteSpace(request.Email))
@@ -356,6 +375,15 @@ namespace Jellyfin.Plugin.Kindle.Api
         [HttpPut("Devices/{deviceId}")]
         public IActionResult UpdateDevice([FromQuery, Required] string userId, string deviceId, [FromBody] UpdateDeviceRequest request)
         {
+            // Verify user is updating devices only for themselves
+            var authUserId = HttpContext.User.FindFirst("sub")?.Value ??
+                            HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(authUserId) || authUserId != userId)
+            {
+                return Unauthorized(new { error = "You can only update your own devices." });
+            }
+
             var devices = _config.UserDevices;
             if (!devices.TryGetValue(userId, out var userDevices))
             {
@@ -421,6 +449,15 @@ namespace Jellyfin.Plugin.Kindle.Api
         [HttpDelete("Devices/{deviceId}")]
         public IActionResult DeleteDevice([FromQuery, Required] string userId, string deviceId)
         {
+            // Verify user is deleting devices only for themselves
+            var authUserId = HttpContext.User.FindFirst("sub")?.Value ??
+                            HttpContext.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(authUserId) || authUserId != userId)
+            {
+                return Unauthorized(new { error = "You can only delete your own devices." });
+            }
+
             var devices = _config.UserDevices;
             if (!devices.TryGetValue(userId, out var userDevices))
             {
@@ -561,8 +598,9 @@ namespace Jellyfin.Plugin.Kindle.Api
                 return Unauthorized();
             }
 
+            // Users can only access their own history
             var history = _historyService.GetUserHistory(userId, Math.Min(limit, 100));
-            return Ok(new { history });
+            return Ok(new { logs = history });
         }
 
         /// <summary>
@@ -647,8 +685,13 @@ namespace Jellyfin.Plugin.Kindle.Api
     /// </summary>
     public class AddDeviceRequest
     {
+        [JsonPropertyName("deviceName")]
         public string DeviceName { get; set; }
+
+        [JsonPropertyName("email")]
         public string Email { get; set; }
+
+        [JsonPropertyName("preferredFormat")]
         public string PreferredFormat { get; set; } = "epub";
     }
 
@@ -657,9 +700,16 @@ namespace Jellyfin.Plugin.Kindle.Api
     /// </summary>
     public class UpdateDeviceRequest
     {
+        [JsonPropertyName("deviceName")]
         public string DeviceName { get; set; }
+
+        [JsonPropertyName("email")]
         public string Email { get; set; }
+
+        [JsonPropertyName("preferredFormat")]
         public string PreferredFormat { get; set; }
+
+        [JsonPropertyName("isDefault")]
         public bool? IsDefault { get; set; }
     }
 }
