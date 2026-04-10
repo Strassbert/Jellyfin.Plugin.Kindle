@@ -17,6 +17,7 @@
             save: 'Save',
             cancel: 'Cancel',
             clear: 'Clear',
+            help: 'Help',
             emailPlaceholder: 'your-name@kindle.com',
             emailSaved: 'E-Book Reader Email saved.',
             emailCleared: 'E-Book Reader Email cleared.',
@@ -25,7 +26,14 @@
             settingsTitle: 'E-Book Reader Settings',
             emailLabel: 'E-Book Reader Email',
             currentEmail: 'Current Email: {email}',
-            noEmailSet: 'No email configured'
+            noEmailSet: 'No email configured',
+            helpTitle: 'Example Kindle',
+            helpText1: 'To find your Send to Kindle email address, go to ',
+            helpLink1: 'Manage Your Content and Devices',
+            helpText2: ' > Settings > Personal Document Settings.',
+            helpText3: 'Only approved email addresses can send files to your Kindle library. Before sending, make sure the account you will use is listed in your ',
+            helpLink2: 'Email List for Approved Personal Document',
+            helpText4: ' in your Personal Document Settings.'
         },
         de: {
             sendToKindle: 'An E-Book Reader senden',
@@ -37,6 +45,7 @@
             save: 'Speichern',
             cancel: 'Abbrechen',
             clear: 'Löschen',
+            help: 'Hilfe',
             emailPlaceholder: 'dein-name@kindle.com',
             emailSaved: 'E-Book Reader E-Mail gespeichert.',
             emailCleared: 'E-Book Reader E-Mail gelöscht.',
@@ -45,7 +54,14 @@
             settingsTitle: 'E-Book Reader Einstellungen',
             emailLabel: 'E-Book Reader E-Mail',
             currentEmail: 'Aktuelle E-Mail: {email}',
-            noEmailSet: 'Keine E-Mail konfiguriert'
+            noEmailSet: 'Keine E-Mail konfiguriert',
+            helpTitle: 'Beispiel Kindle',
+            helpText1: 'Um deine f\u00fcr Send to Kindle verwendete E-Mail-Adresse zu finden, w\u00e4hle ',
+            helpLink1: 'Meine Inhalte und Ger\u00e4te verwalten',
+            helpText2: ' > Einstellungen > Pers\u00f6nliche Dokumente Einstellungen.',
+            helpText3: 'Nur genehmigte E-Mail-Adressen k\u00f6nnen Dateien an deine Kindle-Bibliothek senden. Vergewissere dich vor dem Senden, dass das Konto, das du verwenden wirst, in deiner ',
+            helpLink2: 'E-Mail-Liste f\u00fcr genehmigte pers\u00f6nliche Dokumente',
+            helpText4: ' in deinen Einstellungen f\u00fcr pers\u00f6nliche Dokumente aufgef\u00fchrt ist.'
         }
     };
 
@@ -260,7 +276,8 @@
         Object.assign(buttonContainer.style, {
             display: 'flex',
             gap: '0.5em',
-            justifyContent: 'flex-end'
+            justifyContent: 'flex-end',
+            marginBottom: '1em'
         });
 
         var saveBtn = document.createElement('button');
@@ -303,9 +320,52 @@
         buttonContainer.appendChild(cancelBtn);
         buttonContainer.appendChild(saveBtn);
 
+        // Help section (collapsible)
+        var helpSection = document.createElement('div');
+        helpSection.style.cssText = 'border-top:1px solid rgba(255,255,255,0.1);padding-top:1em;margin-top:1em;';
+
+        var helpSummary = document.createElement('div');
+        helpSummary.style.cssText = 'cursor:pointer;font-weight:bold;user-select:none;display:flex;align-items:center;gap:0.5em;';
+        helpSummary.innerHTML = '<span style="display:inline-block;">▸</span> ' + t('helpTitle');
+
+        var helpContent = document.createElement('div');
+        helpContent.style.display = 'none';
+        helpContent.style.cssText = 'margin-top:0.8em;font-size:0.85em;opacity:0.85;line-height:1.5;';
+
+        var lang = getLang();
+        var helpLink1Href = lang === 'de'
+            ? 'https://www.amazon.de/hz/mycd/digital-console/contentlist/pdocs/dateDsc'
+            : 'https://www.amazon.com/hz/mycd/digital-console/contentlist/pdocs/dateDsc';
+        var helpLink2Href = lang === 'de'
+            ? 'https://www.amazon.de/hz/mycd/preferences/myx#/home/settings/payment'
+            : 'https://www.amazon.com/hz/mycd/preferences/myx#/home/settings/payment';
+
+        helpContent.innerHTML =
+            '<p style="margin:0.5em 0;">' +
+            t('helpText1') +
+            '<a href="' + helpLink1Href + '" target="_blank" style="color:#00a4dc;text-decoration:underline;">' + t('helpLink1') + '</a>' +
+            t('helpText2') +
+            '</p>' +
+            '<p style="margin:0.5em 0;">' +
+            t('helpText3') +
+            '<a href="' + helpLink2Href + '" target="_blank" style="color:#00a4dc;text-decoration:underline;">' + t('helpLink2') + '</a>' +
+            t('helpText4') +
+            '</p>';
+
+        helpSummary.addEventListener('click', function () {
+            var isHidden = helpContent.style.display === 'none';
+            helpContent.style.display = isHidden ? 'block' : 'none';
+            var icon = helpSummary.querySelector('span');
+            icon.textContent = isHidden ? '▾' : '▸';
+        });
+
+        helpSection.appendChild(helpSummary);
+        helpSection.appendChild(helpContent);
+
         popup.appendChild(emailInput);
         popup.appendChild(currentEmailDisplay);
         popup.appendChild(buttonContainer);
+        popup.appendChild(helpSection);
 
         emailInput.focus();
 
