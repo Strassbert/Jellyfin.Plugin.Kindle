@@ -38,12 +38,6 @@ namespace Jellyfin.Plugin.Kindle
                     EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.configPage.html", GetType().Namespace),
                     EnableInMainMenu = true,
                     MenuIcon = "email"
-                },
-                new PluginPageInfo
-                {
-                    Name = "KindleUserSettings",
-                    EmbeddedResourcePath = string.Format(CultureInfo.InvariantCulture, "{0}.Configuration.userSettings.html", GetType().Namespace),
-                    EnableInMainMenu = false
                 }
             };
         }
