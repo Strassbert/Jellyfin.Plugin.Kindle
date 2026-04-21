@@ -1,6 +1,9 @@
 using System;
 using System.Text;
+using System.Runtime.InteropServices;
+#if NET5_0_OR_GREATER && WINDOWS
 using System.Security.Cryptography;
+#endif
 
 namespace Jellyfin.Plugin.Kindle.Services
 {
@@ -12,7 +15,7 @@ namespace Jellyfin.Plugin.Kindle.Services
         private const string EncryptionPrefix = "ENCRYPTED:";
 
         /// <summary>
-        /// Encrypt a password using DPAPI (Data Protection API)
+        /// Encrypt a password using DPAPI (Data Protection API) on Windows
         /// DPAPI automatically uses the current user/machine context for encryption
         /// </summary>
         public string EncryptPassword(string plainPassword)
@@ -24,8 +27,13 @@ namespace Jellyfin.Plugin.Kindle.Services
             if (plainPassword.StartsWith(EncryptionPrefix))
                 return plainPassword;
 
+            // Only encrypt on Windows where DPAPI is available
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return plainPassword;
+
             try
             {
+#if NET5_0_OR_GREATER && WINDOWS
                 var plainBytes = Encoding.UTF8.GetBytes(plainPassword);
                 var encryptedBytes = ProtectedData.Protect(
                     plainBytes,
@@ -34,6 +42,9 @@ namespace Jellyfin.Plugin.Kindle.Services
 
                 var base64 = Convert.ToBase64String(encryptedBytes);
                 return EncryptionPrefix + base64;
+#else
+                return plainPassword;
+#endif
             }
             catch
             {
@@ -56,6 +67,7 @@ namespace Jellyfin.Plugin.Kindle.Services
 
             try
             {
+#if NET5_0_OR_GREATER && WINDOWS
                 var base64 = encryptedPassword.Substring(EncryptionPrefix.Length);
                 var encryptedBytes = Convert.FromBase64String(base64);
                 var plainBytes = ProtectedData.Unprotect(
@@ -64,6 +76,9 @@ namespace Jellyfin.Plugin.Kindle.Services
                     DataProtectionScope.CurrentUser);
 
                 return Encoding.UTF8.GetString(plainBytes);
+#else
+                return encryptedPassword;
+#endif
             }
             catch
             {

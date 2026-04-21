@@ -18,19 +18,19 @@ namespace Jellyfin.Plugin.Kindle.Models
         /// Jellyfin User ID this device belongs to
         /// </summary>
         [JsonPropertyName("userId")]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Device name (e.g., "Kindle Paperwhite", "Kobo Clara")
         /// </summary>
         [JsonPropertyName("deviceName")]
-        public string DeviceName { get; set; }
+        public string? DeviceName { get; set; }
 
         /// <summary>
         /// E-reader email address (e.g., user@kindle.com)
         /// </summary>
         [JsonPropertyName("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         /// <summary>
         /// Preferred file format for this device
