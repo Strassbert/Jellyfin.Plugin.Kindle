@@ -183,10 +183,10 @@ namespace Jellyfin.Plugin.Kindle.Services
         public int UniqueUsers { get; set; }
 
         [JsonPropertyName("mostActiveUser")]
-        public string MostActiveUser { get; set; }
+        public string? MostActiveUser { get; set; }
 
         [JsonPropertyName("mostCommonFormat")]
-        public string MostCommonFormat { get; set; }
+        public string? MostCommonFormat { get; set; }
 
         [JsonPropertyName("averageDailyActivity")]
         public double AverageDailyActivity { get; set; }
@@ -201,7 +201,7 @@ namespace Jellyfin.Plugin.Kindle.Services
     public class UserStatistics
     {
         [JsonPropertyName("userId")]
-        public string UserId { get; set; }
+        public string? UserId { get; set; }
 
         [JsonPropertyName("totalSends")]
         public int TotalSends { get; set; }
@@ -219,12 +219,12 @@ namespace Jellyfin.Plugin.Kindle.Services
         public DateTime? LastSendAt { get; set; }
 
         [JsonPropertyName("lastSentTo")]
-        public string LastSentTo { get; set; }
+        public string? LastSentTo { get; set; }
 
         [JsonPropertyName("successRate")]
         public double SuccessRate { get; set; }
 
         [JsonPropertyName("favoriteFormat")]
-        public string FavoriteFormat { get; set; }
+        public string? FavoriteFormat { get; set; }
     }
 }

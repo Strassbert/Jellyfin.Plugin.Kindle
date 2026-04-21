@@ -71,7 +71,7 @@ namespace Jellyfin.Plugin.Kindle.Api
         public async Task<IActionResult> SendToKindle(
             [FromQuery, Required] string itemId,
             [FromQuery, Required] string userId,
-            [FromQuery] string deviceId = null)
+            [FromQuery] string? deviceId = null)
         {
             // Rate limiting check (5 attempts per minute, 50 per hour)
             if (!_rateLimiter.IsAllowed(userId, "send"))
@@ -122,7 +122,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             }
 
             // Determine target email (device-based or legacy)
-            string kindleEmail = null;
+            string? kindleEmail = null;
 
             if (!string.IsNullOrEmpty(deviceId))
             {
@@ -163,7 +163,6 @@ namespace Jellyfin.Plugin.Kindle.Api
             try
             {
                 await _mailService.SendBookAsync(kindleEmail, item.Path, item.Name + extension, _config);
-                var fileInfo = new System.IO.FileInfo(item.Path);
                 var fileSizeMb = fileInfo.Length / (1024.0 * 1024.0);
 
                 // Log send history
@@ -195,7 +194,6 @@ namespace Jellyfin.Plugin.Kindle.Api
                 // Log failed send
                 if (_config.EnableSendHistory)
                 {
-                    var fileInfo = new System.IO.FileInfo(item.Path);
                     var sendLog = new SendLog
                     {
                         UserId = userId,
@@ -686,13 +684,13 @@ namespace Jellyfin.Plugin.Kindle.Api
     public class AddDeviceRequest
     {
         [JsonPropertyName("deviceName")]
-        public string DeviceName { get; set; }
+        public string? DeviceName { get; set; }
 
         [JsonPropertyName("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [JsonPropertyName("preferredFormat")]
-        public string PreferredFormat { get; set; } = "epub";
+        public string? PreferredFormat { get; set; } = "epub";
     }
 
     /// <summary>
@@ -701,13 +699,13 @@ namespace Jellyfin.Plugin.Kindle.Api
     public class UpdateDeviceRequest
     {
         [JsonPropertyName("deviceName")]
-        public string DeviceName { get; set; }
+        public string? DeviceName { get; set; }
 
         [JsonPropertyName("email")]
-        public string Email { get; set; }
+        public string? Email { get; set; }
 
         [JsonPropertyName("preferredFormat")]
-        public string PreferredFormat { get; set; }
+        public string? PreferredFormat { get; set; }
 
         [JsonPropertyName("isDefault")]
         public bool? IsDefault { get; set; }
