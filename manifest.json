@@ -2,8 +2,8 @@
   {
     "guid": "E3B2B4A1-1234-4567-89AB-CDEF12345678",
     "name": "E-Book Share",
-    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) directly from the detail page to an E-Book via email.",
-    "overview": "Adds a 'Send to E-Book Reader' button on book detail pages. Supports per-user E-Book email addresses, SMTP and OAuth2 authentication, and i18n (English/German).",
+    "description": "Send e-books (EPUB, PDF, MOBI, AZW3) directly from the detail page to an E-Book Reader via email.",
+    "overview": "Adds a 'Send to reader' button on book detail pages. Per-user reader addresses, SMTP with selectable encryption, English and German.",
     "owner": "Strassbert",
     "category": "Email",
     "imageUrl": "https://raw.githubusercontent.com/Strassbert/Jellyfin.Plugin.Kindle/main/thumb.png",
@@ -24,7 +24,6 @@
         "checksum": "DFC7E066F4E33BAF43C9CB8B345DF7C1",
         "timestamp": "2026-02-14T00:53:00Z"
       }
-
     ]
   }
 ]

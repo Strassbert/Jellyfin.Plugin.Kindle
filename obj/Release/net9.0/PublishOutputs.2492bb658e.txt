@@ -1,6 +1,0 @@
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\Jellyfin.Plugin.Kindle.dll
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\Jellyfin.Plugin.Kindle.pdb
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\BouncyCastle.Cryptography.dll
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\MailKit.dll
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\MimeKit.dll
-C:\Projekte\Jellyfin.Plugin.Kindle\bin\Release\net9.0\publish\Jellyfin.Plugin.Kindle.deps.json

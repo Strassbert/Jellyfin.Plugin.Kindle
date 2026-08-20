@@ -1,14 +1,31 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
+
+    <!-- Do not rename: the plugin's configuration file is derived from the assembly
+         name (BasePlugin<T>.ConfigurationFileName), so renaming orphans every
+         existing installation's saved settings. -->
     <AssemblyName>Jellyfin.Plugin.Kindle</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.Kindle</RootNamespace>
-    <Version>1.1.0.0</Version>
+
+    <!-- These three MUST equal the version published in manifest.json.
+         The dashboard reads PluginInfo.Version from the *assembly*
+         (BasePlugin<T> ctor: SetAttributes(..., assemblyName.Version)) but the
+         server resolves uninstall/enable/disable against meta.json, which Jellyfin
+         generates from manifest.json. When they differ,
+         DELETE /Plugins/{id}/{version} matches nothing and returns 404 - which is
+         exactly why uninstalling 1.2.0.0 did nothing.
+         Use scripts/set-version.sh to change the version; it updates both files. -->
+    <Version>1.3.0.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
+
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,8 +35,9 @@
     <PackageReference Include="Jellyfin.Model" Version="10.11.6">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="MailKit" Version="4.14.1" />
-    <PackageReference Include="MimeKit" Version="4.14.0" />
+    <!-- 4.14.x carries known advisories (GHSA-9j88-vvj5-vhgr / GHSA-g7hc-96xr-gvvx). -->
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MimeKit" Version="4.17.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,7 +46,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\*.html" />
-    <EmbeddedResource Include="Configuration\*.js" />
     <EmbeddedResource Include="Web\*.js" />
   </ItemGroup>
 

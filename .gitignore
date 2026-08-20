@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+
+# Packaging output
+artifacts/
+*.zip
