@@ -71,6 +71,61 @@ namespace Jellyfin.Plugin.Kindle.Services
             }
         }
 
+        /// <summary>
+        /// Sends a small message to verify the whole delivery path. A connection test
+        /// only proves that the login works - it cannot detect that the reader vendor
+        /// silently drops mail from a sender address that is not on its approved list,
+        /// which is the single most common reason books never arrive.
+        /// </summary>
+        public async Task<MailResult> SendTestAsync(
+            string recipientEmail,
+            PluginConfiguration config,
+            CancellationToken cancellationToken = default)
+        {
+            var configError = Validate(config);
+            if (configError is not null)
+            {
+                return MailResult.Fail(MailFailure.NotConfigured, configError);
+            }
+
+            var senderEmail = string.IsNullOrWhiteSpace(config.SenderEmail) ? config.SmtpUser : config.SenderEmail;
+            var senderName = string.IsNullOrWhiteSpace(config.SenderName) ? "Jellyfin" : config.SenderName;
+
+            using var message = new MimeMessage();
+            message.From.Add(new MailboxAddress(senderName, senderEmail));
+            message.To.Add(new MailboxAddress(string.Empty, recipientEmail));
+
+            // Never "convert" here: that subject makes Amazon treat the mail as a
+            // document to import, and the test would show up as a junk entry in the
+            // user's library.
+            message.Subject = "Jellyfin E-Book Share test message";
+            message.Body = new TextPart("plain")
+            {
+                Text = "This is a test message from the Jellyfin E-Book Share plugin.\n\n"
+                       + $"If you received it, {senderEmail} can deliver to {recipientEmail} "
+                       + "and books will arrive the same way."
+            };
+
+            using var client = CreateClient();
+
+            try
+            {
+                await ConnectAndAuthenticateAsync(client, config, cancellationToken).ConfigureAwait(false);
+                await client.SendAsync(message, cancellationToken).ConfigureAwait(false);
+
+                _logger.LogInformation("[E-Book Share] Test message sent to {Email}.", recipientEmail);
+                return MailResult.Ok();
+            }
+            catch (Exception ex)
+            {
+                return Classify(ex, "sending the test message");
+            }
+            finally
+            {
+                await SafeDisconnectAsync(client).ConfigureAwait(false);
+            }
+        }
+
         public async Task<MailResult> SendBookAsync(
             string recipientEmail,
             string filePath,

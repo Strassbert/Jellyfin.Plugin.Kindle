@@ -15,48 +15,53 @@
 
             <form id="KindleUserForm">
                 <div class="verticalSection">
-                    <h2 class="sectionTitle" data-i18n="title">E-Book Share</h2>
+                    <h2 class="sectionTitle" data-i18n="user.title">E-Book Share</h2>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="UserKindleEmail" data-i18n="emailLabel">
+                        <label class="inputLabel inputLabelUnfocused" for="UserKindleEmail" data-i18n="user.emailLabel">
                             Reader email address
                         </label>
                         <input id="UserKindleEmail" type="email" is="emby-input"
                                placeholder="name@kindle.com" autocomplete="off" />
-                        <div class="fieldDescription" data-i18n="emailDesc">
+                        <div class="fieldDescription" data-i18n="user.emailDesc">
                             Books you send are delivered to this address. Only you can see and change it.
                         </div>
                     </div>
 
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                            <span data-i18n="save">Save</span>
+                            <span data-i18n="user.save">Save</span>
+                        </button>
+                        <button is="emby-button" type="button" id="btnTestMail" class="raised block emby-button"
+                                style="margin-top:0.6em;">
+                            <span class="material-icons" aria-hidden="true">outgoing_mail</span>
+                            <span data-i18n="user.testMailButton">Send test message</span>
                         </button>
                         <button is="emby-button" type="button" id="btnDelete" class="raised block emby-button"
                                 style="margin-top:0.6em;">
-                            <span data-i18n="delete">Remove address</span>
+                            <span data-i18n="user.delete">Remove address</span>
                         </button>
                     </div>
                 </div>
             </form>
 
             <div class="verticalSection">
-                <h2 class="sectionTitle" data-i18n="helpTitle">Where do I find this address?</h2>
+                <h2 class="sectionTitle" data-i18n="user.helpTitle">Where do I find this address?</h2>
                 <ol class="fieldDescription" style="line-height:1.7;padding-left:1.2em;">
-                    <li data-i18n="help1">Open your Amazon account and go to "Manage Your Content and Devices".</li>
-                    <li data-i18n="help2">Switch to "Preferences" and open "Personal Document Settings".</li>
-                    <li data-i18n="help3">Copy the address ending in @kindle.com and paste it above.</li>
-                    <li data-i18n="help4">
+                    <li data-i18n="user.help1">Open your Amazon account and go to "Manage Your Content and Devices".</li>
+                    <li data-i18n="user.help2">Switch to "Preferences" and open "Personal Document Settings".</li>
+                    <li data-i18n="user.help3">Copy the address ending in @kindle.com and paste it above.</li>
+                    <li data-i18n="user.help4">
                         In the same place, add your server's sender address to the approved list -
                         Amazon silently drops mail from unapproved senders.
                     </li>
                 </ol>
                 <p>
                     <a id="amazonLink" is="emby-linkbutton" class="button-link" target="_blank" rel="noopener noreferrer"
-                       data-i18n="amazonLink">Open Amazon settings</a>
+                       data-i18n="user.amazonLink">Open Amazon settings</a>
                 </p>
                 <p class="fieldDescription">
-                    <span data-i18n="senderHint">Sender address used by this server:</span>
+                    <span data-i18n="user.senderHint">Sender address used by this server:</span>
                     <span id="senderHintValue"></span>
                 </p>
             </div>
@@ -67,61 +72,35 @@
         (function () {
             'use strict';
 
-            var i18n = {
-                de: {
-                    title: 'E-Book Share',
-                    emailLabel: 'E-Mail-Adresse des Readers',
-                    emailDesc: 'Gesendete Bücher gehen an diese Adresse. Nur du kannst sie sehen und ändern.',
-                    save: 'Speichern',
-                    'delete': 'Adresse entfernen',
-                    helpTitle: 'Wo finde ich diese Adresse?',
-                    help1: 'Öffne dein Amazon-Konto und gehe zu "Meine Inhalte und Geräte verwalten".',
-                    help2: 'Wechsle zu "Einstellungen" und öffne "Persönliche Dokumente-Einstellungen".',
-                    help3: 'Kopiere die Adresse, die auf @kindle.com endet, und trage sie oben ein.',
-                    help4: 'Trage an derselben Stelle die Absenderadresse deines Servers in die Liste der genehmigten E-Mail-Adressen ein — Amazon verwirft Mails von nicht genehmigten Absendern kommentarlos.',
-                    amazonLink: 'Amazon-Einstellungen öffnen',
-                    senderHint: 'Absenderadresse dieses Servers:',
-                    saved: 'Adresse gespeichert.',
-                    removed: 'Adresse entfernt.',
-                    invalid: 'Bitte eine gültige E-Mail-Adresse eingeben.',
-                    error: 'Speichern fehlgeschlagen.',
-                    noSmtp: 'Der Administrator hat noch keinen Mailserver eingerichtet. Der Versand funktioniert erst danach.',
-                    confirmDelete: 'Hinterlegte Adresse wirklich entfernen?'
-                },
-                en: {
-                    saved: 'Address saved.',
-                    removed: 'Address removed.',
-                    invalid: 'Please enter a valid email address.',
-                    error: 'Saving failed.',
-                    noSmtp: 'Your administrator has not set up a mail server yet. Sending will not work until they do.',
-                    confirmDelete: 'Remove the stored address?'
-                }
-            };
-
-            var lang = (navigator.language || 'en').substring(0, 2).toLowerCase() === 'de' ? 'de' : 'en';
-
-            function t(key) {
-                return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
-            }
-
             var page = document.querySelector('#KindleUserSettingsPage');
             var input = page.querySelector('#UserKindleEmail');
             var status = page.querySelector('#kindleStatus');
+            var strings = {};
+            var loadPending = false;
 
-            function translate() {
-                if (lang !== 'de') return;
-                page.querySelectorAll('[data-i18n]').forEach(function (el) {
-                    var value = i18n.de[el.getAttribute('data-i18n')];
-                    if (value) el.textContent = value;
-                });
+            function uiLanguage() {
+                return document.documentElement.getAttribute('lang') || navigator.language || 'en';
             }
 
-            function showStatus(message, kind) {
-                status.textContent = message;
-                status.style.display = message ? 'block' : 'none';
-                status.style.background = kind === 'error' ? 'rgba(244,67,54,0.15)'
-                    : kind === 'ok' ? 'rgba(76,175,80,0.15)'
-                        : 'rgba(255,193,7,0.15)';
+            function isGerman() {
+                return uiLanguage().toLowerCase().indexOf('de') === 0;
+            }
+
+            // The English wording already sits in the markup, so a failed fetch leaves a
+            // usable page rather than a list of raw keys.
+            function t(key) {
+                var value = strings[key] || key;
+                for (var i = 1; i < arguments.length; i++) {
+                    value = value.replace('{' + (i - 1) + '}', arguments[i]);
+                }
+                return value;
+            }
+
+            function translate() {
+                page.querySelectorAll('[data-i18n]').forEach(function (el) {
+                    var value = strings[el.getAttribute('data-i18n')];
+                    if (value) el.textContent = value;
+                });
             }
 
             // ApiClient.ajax rejects with the fetch Response object, so the body has to
@@ -135,7 +114,7 @@
                     })
                     .then(function (text) {
                         var body = JSON.parse(text || '{}');
-                        if (lang === 'de' && body.errorDe) return body.errorDe;
+                        if (isGerman() && body.errorDe) return body.errorDe;
                         if (body.error) return body.error;
                         return fallback;
                     })
@@ -144,12 +123,12 @@
                     });
             }
 
-            function notify(message) {
-                if (window.Dashboard && Dashboard.alert) {
-                    Dashboard.alert(message);
-                } else {
-                    alert(message);
-                }
+            function showStatus(message, kind) {
+                status.textContent = message;
+                status.style.display = message ? 'block' : 'none';
+                status.style.background = kind === 'error' ? 'rgba(244,67,54,0.15)'
+                    : kind === 'ok' ? 'rgba(76,175,80,0.15)'
+                        : 'rgba(255,193,7,0.15)';
             }
 
             function loading(show) {
@@ -161,42 +140,49 @@
                 }
             }
 
-            page.querySelector('#amazonLink').href = lang === 'de'
-                ? 'https://www.amazon.de/hz/mycd/myx#/home/settings/payment'
-                : 'https://www.amazon.com/hz/mycd/myx#/home/settings/payment';
-
             function isValid(email) {
                 return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
             }
 
-            var loadPending = false;
+            page.querySelector('#amazonLink').href = isGerman()
+                ? 'https://www.amazon.de/hz/mycd/myx#/home/settings/payment'
+                : 'https://www.amazon.com/hz/mycd/myx#/home/settings/payment';
 
+            // pageshow can fire before or after this inline script runs, so both paths
+            // call load(); collapse duplicates into one round of requests.
             function load() {
-                if (loadPending) return;
+                if (loadPending) return Promise.resolve();
                 loadPending = true;
                 loading(true);
 
-                // Status also tells us whether the admin configured SMTP at all, so the
-                // user is not left wondering why a saved address never delivers.
-                ApiClient.ajax({
+                return window.ApiClient.ajax({
                     type: 'GET',
-                    url: ApiClient.getUrl('Kindle/Status'),
+                    url: window.ApiClient.getUrl('KindlePlugin/Strings', { lang: uiLanguage() }),
                     dataType: 'json'
                 }).then(function (result) {
-                    if (!result.SmtpConfigured) {
-                        showStatus(t('noSmtp'), 'warn');
-                    } else {
-                        showStatus('', null);
-                    }
-                    page.querySelector('#senderHintValue').textContent = result.SenderEmail || '-';
-                }).catch(function () { /* status is advisory only */ });
-
-                ApiClient.ajax({
-                    type: 'GET',
-                    url: ApiClient.getUrl('Kindle/UserEmail'),
-                    dataType: 'json'
-                }).then(function (result) {
-                    input.value = result.email || '';
+                    strings = result || {};
+                    translate();
+                }).catch(function () {
+                    /* markup keeps its English defaults */
+                }).then(function () {
+                    // Status also reports whether the admin configured SMTP at all, so the
+                    // user is not left wondering why a saved address never delivers.
+                    return window.ApiClient.ajax({
+                        type: 'GET',
+                        url: window.ApiClient.getUrl('Kindle/Status'),
+                        dataType: 'json'
+                    }).then(function (result) {
+                        showStatus(result.SmtpConfigured ? '' : t('user.noSmtp'), 'warn');
+                        page.querySelector('#senderHintValue').textContent = result.SenderEmail || '-';
+                    }).catch(function () { /* advisory only */ });
+                }).then(function () {
+                    return window.ApiClient.ajax({
+                        type: 'GET',
+                        url: window.ApiClient.getUrl('Kindle/UserEmail'),
+                        dataType: 'json'
+                    }).then(function (result) {
+                        input.value = result.email || '';
+                    }).catch(function () { /* leave the field empty */ });
                 }).finally(function () {
                     loadPending = false;
                     loading(false);
@@ -211,22 +197,22 @@
                 var email = input.value.trim();
                 if (!isValid(email)) {
                     input.style.borderColor = '#f44336';
-                    showStatus(t('invalid'), 'error');
+                    showStatus(t('user.invalid'), 'error');
                     return false;
                 }
 
                 input.style.borderColor = '';
                 loading(true);
 
-                ApiClient.ajax({
+                window.ApiClient.ajax({
                     type: 'POST',
-                    url: ApiClient.getUrl('Kindle/UserEmail', { email: email })
+                    url: window.ApiClient.getUrl('Kindle/UserEmail', { email: email })
                 }).then(function () {
                     loading(false);
-                    showStatus(t('saved'), 'ok');
+                    showStatus(t('user.saved'), 'ok');
                 }).catch(function (err) {
                     loading(false);
-                    localizedError(err, t('error')).then(function (message) {
+                    localizedError(err, t('user.error')).then(function (message) {
                         showStatus(message, 'error');
                     });
                 });
@@ -234,24 +220,51 @@
                 return false;
             });
 
-            page.querySelector('#btnDelete').addEventListener('click', function () {
-                if (!window.confirm(t('confirmDelete'))) return;
+            page.querySelector('#btnTestMail').addEventListener('click', function () {
+                var button = this;
 
-                loading(true);
-                ApiClient.ajax({
-                    type: 'DELETE',
-                    url: ApiClient.getUrl('Kindle/UserEmail')
+                if (!isValid(input.value.trim())) {
+                    showStatus(t('user.testMailNeedsAddress'), 'error');
+                    return;
+                }
+
+                button.disabled = true;
+                showStatus(t('user.testMailSending'), 'warn');
+
+                window.ApiClient.ajax({
+                    type: 'POST',
+                    url: window.ApiClient.getUrl('Kindle/TestMail'),
+                    dataType: 'json'
                 }).then(function () {
-                    loading(false);
-                    input.value = '';
-                    showStatus(t('removed'), 'ok');
-                }).catch(function () {
-                    loading(false);
-                    notify(t('error'));
+                    showStatus(t('user.testMailOk'), 'ok');
+                }).catch(function (err) {
+                    localizedError(err, t('user.error')).then(function (message) {
+                        showStatus(message, 'error');
+                    });
+                }).finally(function () {
+                    button.disabled = false;
                 });
             });
 
-            translate();
+            page.querySelector('#btnDelete').addEventListener('click', function () {
+                if (!window.confirm(t('user.confirmDelete'))) return;
+
+                loading(true);
+                window.ApiClient.ajax({
+                    type: 'DELETE',
+                    url: window.ApiClient.getUrl('Kindle/UserEmail')
+                }).then(function () {
+                    input.value = '';
+                    showStatus(t('user.removed'), 'ok');
+                }).catch(function (err) {
+                    localizedError(err, t('user.error')).then(function (message) {
+                        showStatus(message, 'error');
+                    });
+                }).finally(function () {
+                    loading(false);
+                });
+            });
+
             load();
         })();
     </script>

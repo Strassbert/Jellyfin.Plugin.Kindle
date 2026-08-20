@@ -11,79 +11,45 @@
 
     // ---------------------------------------------------------------- i18n ----
 
-    var i18n = {
-        en: {
-            send: 'Send to reader',
-            sending: 'Sending…',
-            sent: 'Sent!',
-            sentToast: 'Book sent to your reader.',
-            errorSending: 'Could not send the book.',
-            enterEmailTitle: 'Set up your reader',
-            enterEmail: 'Enter the email address of your e-book reader. You only have to do this once.',
-            emailPlaceholder: 'name@kindle.com',
-            emailInvalid: 'Please enter a valid email address.',
-            save: 'Save and send',
-            cancel: 'Cancel',
-            emailSaved: 'Address saved.',
-            tooLarge: 'Too large to send (%s MB, limit %s MB)',
-            notConfigured: 'The administrator has not set up a mail server yet',
-            settingsLink: 'E-Book Share',
-            senderHint: 'Approve %s as a sender in your reader account, otherwise the mail is dropped.'
-        },
-        de: {
-            send: 'An Reader senden',
-            sending: 'Wird gesendet…',
-            sent: 'Gesendet!',
-            sentToast: 'Buch an deinen Reader gesendet.',
-            errorSending: 'Das Buch konnte nicht gesendet werden.',
-            enterEmailTitle: 'Reader einrichten',
-            enterEmail: 'Gib die E-Mail-Adresse deines E-Book-Readers ein. Das ist nur einmal nötig.',
-            emailPlaceholder: 'name@kindle.com',
-            emailInvalid: 'Bitte eine gültige E-Mail-Adresse eingeben.',
-            save: 'Speichern und senden',
-            cancel: 'Abbrechen',
-            emailSaved: 'Adresse gespeichert.',
-            tooLarge: 'Zu groß zum Senden (%s MB, Limit %s MB)',
-            notConfigured: 'Der Administrator hat noch keinen Mailserver eingerichtet',
-            settingsLink: 'E-Book Share',
-            senderHint: 'Gib %s im Reader-Konto als Absender frei, sonst wird die Mail verworfen.'
-        }
-    };
+    // Strings live in Localization/*.json inside the plugin and are fetched once.
+    // Previously the button, the admin page and the user page each carried their own
+    // copy of the same tables, which is how they drifted apart.
+    var strings = null;
 
     // Jellyfin writes the user's chosen interface language onto <html lang>.
     // navigator.language is only the fallback: it reports the browser's locale,
     // which is often not the language the user picked in Jellyfin.
-    function getLang() {
-        var candidates = [
-            document.documentElement.getAttribute('lang'),
-            navigator.language
-        ];
-
-        for (var i = 0; i < candidates.length; i++) {
-            var value = candidates[i];
-            if (!value) continue;
-            var code = value.substring(0, 2).toLowerCase();
-            if (i18n[code]) return code;
-        }
-
-        return 'en';
+    function uiLanguage() {
+        return document.documentElement.getAttribute('lang') || navigator.language || 'en';
     }
 
     function t(key) {
-        var lang = getLang();
-        var value = (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
+        var value = (strings && strings[key]) || key;
 
         for (var i = 1; i < arguments.length; i++) {
-            value = value.replace('%s', arguments[i]);
+            value = value.replace('{' + (i - 1) + '}', arguments[i]);
         }
 
         return value;
     }
 
-    // ApiClient.ajax rejects with the fetch Response object (apiClient.js:
-    // "return Promise.reject(response)"), so the body has to be read asynchronously.
-    // Reading err.responseText - as this plugin did before - always yielded undefined,
-    // which is why the server's specific messages never reached the user.
+    // Nothing renders before this resolves, so the UI can never show raw keys. If the
+    // endpoint is gone - which is exactly what happens when the plugin is uninstalled
+    // while a year-cached copy of this script is still in the browser - the button
+    // stays away instead of appearing broken.
+    function loadStrings() {
+        if (strings) return Promise.resolve(strings);
+
+        return window.ApiClient.ajax({
+            type: 'GET',
+            url: window.ApiClient.getUrl('KindlePlugin/Strings', { lang: uiLanguage() }),
+            dataType: 'json'
+        }).then(function (result) {
+            strings = result || {};
+            return strings;
+        });
+    }
+
     function localizedError(err, fallbackKey) {
         return Promise.resolve()
             .then(function () {
@@ -93,7 +59,7 @@
             })
             .then(function (text) {
                 var body = JSON.parse(text || '{}');
-                if (getLang() === 'de' && body.errorDe) return body.errorDe;
+                if (uiLanguage().toLowerCase().indexOf('de') === 0 && body.errorDe) return body.errorDe;
                 if (body.error) return body.error;
                 return t(fallbackKey);
             })
@@ -164,23 +130,23 @@
 
         var blockedReason = null;
         if (status && status.Reason === 'TOO_LARGE') {
-            blockedReason = t('tooLarge', status.FileSizeMb, status.MaxFileSizeMb);
+            blockedReason = t('button.tooLarge', status.FileSizeMb, status.MaxFileSizeMb);
         } else if (status && !status.SmtpConfigured) {
-            blockedReason = t('notConfigured');
+            blockedReason = t('button.notConfigured');
         }
 
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('is', 'emby-button');
         btn.className = 'btnSendToKindle detailButton emby-button';
-        btn.innerHTML = buttonMarkup('send', t('send'));
+        btn.innerHTML = buttonMarkup('send', t('button.send'));
 
         if (blockedReason) {
             btn.disabled = true;
             btn.title = blockedReason;
             btn.style.opacity = '0.5';
         } else {
-            btn.title = t('send');
+            btn.title = t('button.send');
             btn.addEventListener('click', function () { startSend(item, btn, status); });
         }
 
@@ -211,22 +177,22 @@
         var originalHtml = btn.innerHTML;
 
         btn.disabled = true;
-        btn.innerHTML = buttonMarkup('hourglass_empty', t('sending'));
+        btn.innerHTML = buttonMarkup('hourglass_empty', t('button.sending'));
 
         window.ApiClient.ajax({
             type: 'POST',
             url: apiUrl('Kindle/Send', { itemId: item.Id }),
             dataType: 'json'
         }).then(function () {
-            btn.innerHTML = buttonMarkup('check', t('sent'));
-            toast(t('sentToast'));
+            btn.innerHTML = buttonMarkup('check', t('button.sent'));
+            toast(t('button.sentToast'));
 
             setTimeout(function () {
                 btn.innerHTML = originalHtml;
                 btn.disabled = false;
             }, 3000);
         }).catch(function (err) {
-            localizedError(err, 'errorSending').then(toast);
+            localizedError(err, 'button.errorSending').then(toast);
             btn.innerHTML = originalHtml;
             btn.disabled = false;
         });
@@ -246,7 +212,7 @@
         var dialog = document.createElement('div');
         dialog.setAttribute('role', 'dialog');
         dialog.setAttribute('aria-modal', 'true');
-        dialog.setAttribute('aria-label', t('enterEmailTitle'));
+        dialog.setAttribute('aria-label', t('button.enterEmailTitle'));
         dialog.style.cssText =
             'background:var(--theme-body-background,#1c1c1e);color:var(--theme-text-color,#fff);' +
             'padding:1.5em;border-radius:10px;max-width:26em;width:100%;' +
@@ -254,25 +220,25 @@
 
         var senderHint = status && status.SenderEmail
             ? '<p style="margin:0 0 1em;opacity:0.7;font-size:0.9em;">' +
-              escapeHtml(t('senderHint', status.SenderEmail)) + '</p>'
+              escapeHtml(t('button.senderHint', status.SenderEmail)) + '</p>'
             : '';
 
         dialog.innerHTML =
-            '<h2 style="margin:0 0 0.4em;font-size:1.25em;">' + escapeHtml(t('enterEmailTitle')) + '</h2>' +
-            '<p style="margin:0 0 1em;opacity:0.85;">' + escapeHtml(t('enterEmail')) + '</p>' +
+            '<h2 style="margin:0 0 0.4em;font-size:1.25em;">' + escapeHtml(t('button.enterEmailTitle')) + '</h2>' +
+            '<p style="margin:0 0 1em;opacity:0.85;">' + escapeHtml(t('button.enterEmail')) + '</p>' +
             senderHint +
             '<input type="email" class="kindleEmailInput" inputmode="email" autocomplete="email" ' +
-            'placeholder="' + escapeHtml(t('emailPlaceholder')) + '" ' +
+            'placeholder="' + escapeHtml(t('button.emailPlaceholder')) + '" ' +
             'style="width:100%;padding:0.6em;border:1px solid rgba(255,255,255,0.25);border-radius:5px;' +
             'background:rgba(255,255,255,0.08);color:inherit;font-size:1em;box-sizing:border-box;" />' +
             '<div class="kindleDialogError" style="color:#f44336;min-height:1.4em;font-size:0.85em;margin-top:0.3em;"></div>' +
             '<div style="display:flex;gap:0.5em;margin-top:0.8em;justify-content:flex-end;flex-wrap:wrap;">' +
             '<button type="button" class="kindleDialogCancel" style="padding:0.6em 1.2em;border:1px solid rgba(255,255,255,0.25);' +
             'border-radius:5px;background:transparent;color:inherit;cursor:pointer;font-size:1em;">' +
-            escapeHtml(t('cancel')) + '</button>' +
+            escapeHtml(t('button.cancel')) + '</button>' +
             '<button type="button" class="kindleDialogSave" style="padding:0.6em 1.2em;border:none;border-radius:5px;' +
             'background:var(--theme-primary-color,#00a4dc);color:#fff;cursor:pointer;font-size:1em;">' +
-            escapeHtml(t('save')) + '</button>' +
+            escapeHtml(t('button.save')) + '</button>' +
             '</div>';
 
         overlay.appendChild(dialog);
@@ -317,7 +283,7 @@
             var email = input.value.trim();
 
             if (!isValidEmail(email)) {
-                errorBox.textContent = t('emailInvalid');
+                errorBox.textContent = t('button.emailInvalid');
                 input.style.borderColor = '#f44336';
                 input.focus();
                 return;
@@ -331,12 +297,12 @@
                 url: apiUrl('Kindle/UserEmail', { email: email })
             }).then(function () {
                 close();
-                toast(t('emailSaved'));
+                toast(t('button.emailSaved'));
                 doSend(item, btn);
             }).catch(function (err) {
                 saveBtn.disabled = false;
                 input.style.borderColor = '#f44336';
-                localizedError(err, 'emailInvalid').then(function (message) {
+                localizedError(err, 'button.emailInvalid').then(function (message) {
                     errorBox.textContent = message;
                 });
             });
@@ -436,7 +402,7 @@
             '<div class="listItem">' +
             '<span class="material-icons listItemIcon listItemIcon-transparent" aria-hidden="true">menu_book</span>' +
             '<div class="listItemBody">' +
-            '<div class="listItemBodyText">' + escapeHtml(t('settingsLink')) + '</div>' +
+            '<div class="listItemBodyText">' + escapeHtml(t('button.settingsLink')) + '</div>' +
             '</div>' +
             '</div>';
 
@@ -473,6 +439,18 @@
             return;
         }
 
+        if (!window.ApiClient) {
+            // The web client sets up ApiClient asynchronously on a cold load.
+            setTimeout(init, 250);
+            return;
+        }
+
+        loadStrings().then(start).catch(function (err) {
+            log('strings unavailable, not rendering', err);
+        });
+    }
+
+    function start() {
         document.addEventListener('viewshow', function (e) {
             var target = e.target;
             if (!target || !target.classList) return;

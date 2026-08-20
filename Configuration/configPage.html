@@ -13,122 +13,159 @@
             <form id="KindleConfigForm">
 
                 <div class="verticalSection">
-                    <h2 class="sectionTitle" data-i18n="smtpSection">Mail server (SMTP)</h2>
-                    <p class="fieldDescription" data-i18n="smtpIntro">
+                    <h2 class="sectionTitle" data-i18n="admin.smtpSection">Mail server (SMTP)</h2>
+                    <p class="fieldDescription" data-i18n="admin.smtpIntro">
                         These credentials are used to send books for every user on this server.
                     </p>
 
                     <div class="selectContainer">
-                        <label class="selectLabel" for="Preset" data-i18n="presetLabel">Provider preset</label>
+                        <label class="selectLabel" for="Preset" data-i18n="admin.presetLabel">Provider preset</label>
                         <select is="emby-select" id="Preset" class="emby-select-withcolor emby-select">
-                            <option value="" data-i18n="presetCustom">Custom</option>
+                            <option value="" data-i18n="admin.presetCustom">Custom</option>
                             <option value="gmail">Gmail</option>
                             <option value="outlook">Outlook / Microsoft 365</option>
                             <option value="gmx">GMX</option>
                             <option value="webde">WEB.DE</option>
                             <option value="mailbox">mailbox.org</option>
                         </select>
-                        <div class="fieldDescription" data-i18n="presetDesc">
+                        <div class="fieldDescription" data-i18n="admin.presetDesc">
                             Fills in host, port and encryption. Username and password still have to be entered.
                         </div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SmtpHost" data-i18n="hostLabel">SMTP host</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpHost" data-i18n="admin.hostLabel">SMTP host</label>
                         <input id="SmtpHost" type="text" is="emby-input" autocomplete="off" />
-                        <div class="fieldDescription" data-i18n="hostDesc">For example smtp.gmail.com</div>
+                        <div class="fieldDescription" data-i18n="admin.hostDesc">For example smtp.gmail.com</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SmtpPort" data-i18n="portLabel">SMTP port</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpPort" data-i18n="admin.portLabel">SMTP port</label>
                         <input id="SmtpPort" type="number" is="emby-input" min="1" max="65535" />
                     </div>
 
                     <div class="selectContainer">
-                        <label class="selectLabel" for="Security" data-i18n="securityLabel">Encryption</label>
+                        <label class="selectLabel" for="Security" data-i18n="admin.securityLabel">Encryption</label>
                         <select is="emby-select" id="Security" class="emby-select-withcolor emby-select">
-                            <option value="0" data-i18n="secAuto">Automatic (recommended)</option>
-                            <option value="1" data-i18n="secStartTls">STARTTLS (usually port 587)</option>
-                            <option value="2" data-i18n="secSsl">SSL/TLS on connect (usually port 465)</option>
-                            <option value="3" data-i18n="secNone">None (local relay only)</option>
+                            <option value="0" data-i18n="admin.secAuto">Automatic (recommended)</option>
+                            <option value="1" data-i18n="admin.secStartTls">STARTTLS (usually port 587)</option>
+                            <option value="2" data-i18n="admin.secSsl">SSL/TLS on connect (usually port 465)</option>
+                            <option value="3" data-i18n="admin.secNone">None (local relay only)</option>
                         </select>
-                        <div class="fieldDescription" data-i18n="securityDesc">
-                            Port 465 needs "SSL/TLS on connect". The previous versions could only do STARTTLS, which is why port 465 never worked.
+                        <div class="fieldDescription" data-i18n="admin.securityDesc">
+                            Port 465 needs "SSL/TLS on connect".
                         </div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SmtpUser" data-i18n="userLabel">Username</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpUser" data-i18n="admin.userLabel">Username</label>
                         <input id="SmtpUser" type="text" is="emby-input" autocomplete="off" />
-                        <div class="fieldDescription" data-i18n="userDesc">Leave empty for a relay that needs no login.</div>
+                        <div class="fieldDescription" data-i18n="admin.userDesc">Leave empty for a relay that needs no login.</div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SmtpPassword" data-i18n="passwordLabel">Password</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SmtpPassword" data-i18n="admin.passwordLabel">Password</label>
                         <input id="SmtpPassword" type="password" is="emby-input" autocomplete="new-password" />
-                        <div class="fieldDescription" data-i18n="passwordDesc">
-                            Gmail, Outlook and most providers reject your normal account password here. Create an app password instead.
+                        <div class="fieldDescription">
+                            <span id="passwordState"></span>
+                            <span data-i18n="admin.passwordDesc">
+                                Gmail, Outlook and most providers reject your normal account password here.
+                                Create an app password instead.
+                            </span>
                         </div>
                     </div>
 
+                    <div class="checkboxContainer" id="clearPasswordRow" style="display:none;">
+                        <label class="emby-checkbox-label">
+                            <input id="ClearPassword" type="checkbox" is="emby-checkbox" />
+                            <span data-i18n="admin.passwordClear">Remove the stored password</span>
+                        </label>
+                    </div>
+
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SenderEmail" data-i18n="senderLabel">Sender address</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SenderEmail" data-i18n="admin.senderLabel">Sender address</label>
                         <input id="SenderEmail" type="email" is="emby-input" />
-                        <div class="fieldDescription" data-i18n="senderDesc">
-                            Leave empty to use the username. This address must be approved in the reader account, otherwise every mail bounces.
+                        <div class="fieldDescription" data-i18n="admin.senderDesc">
+                            Leave empty to use the username. This address must be approved in the reader account.
                         </div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="SenderName" data-i18n="senderNameLabel">Sender name</label>
+                        <label class="inputLabel inputLabelUnfocused" for="SenderName" data-i18n="admin.senderNameLabel">Sender name</label>
                         <input id="SenderName" type="text" is="emby-input" />
                     </div>
 
                     <div>
                         <button is="emby-button" type="button" id="btnTest" class="raised block emby-button">
                             <span class="material-icons" aria-hidden="true">wifi_tethering</span>
-                            <span data-i18n="testButton">Test connection</span>
+                            <span data-i18n="admin.testButton">Test connection</span>
                         </button>
                         <div id="testResult" class="fieldDescription" style="margin-top:0.6em;"></div>
                     </div>
                 </div>
 
                 <div class="verticalSection">
-                    <h2 class="sectionTitle" data-i18n="deliverySection">Delivery</h2>
+                    <h2 class="sectionTitle" data-i18n="admin.testMailSection">Test message</h2>
+                    <p class="fieldDescription" data-i18n="admin.testMailDesc">
+                        A connection test only proves that login works. It cannot detect that the reader
+                        vendor rejects your sender address - send a real test message to check that.
+                    </p>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="TestMailAddress" data-i18n="admin.testMailLabel">
+                            Send test message to
+                        </label>
+                        <input id="TestMailAddress" type="email" is="emby-input" placeholder="name@example.com" />
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="button" id="btnTestMail" class="raised block emby-button">
+                            <span class="material-icons" aria-hidden="true">outgoing_mail</span>
+                            <span data-i18n="admin.testMailButton">Send test message</span>
+                        </button>
+                        <div id="testMailResult" class="fieldDescription" style="margin-top:0.6em;"></div>
+                    </div>
+                </div>
+
+                <div class="verticalSection">
+                    <h2 class="sectionTitle" data-i18n="admin.deliverySection">Delivery</h2>
 
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
                             <input id="RequestConversion" type="checkbox" is="emby-checkbox" />
-                            <span data-i18n="conversionLabel">Ask Amazon to convert to Kindle format</span>
+                            <span data-i18n="admin.conversionLabel">Ask Amazon to convert to Kindle format</span>
                         </label>
-                        <div class="fieldDescription checkboxFieldDescription" data-i18n="conversionDesc">
-                            Sends "convert" as the subject line. Only relevant for Amazon Kindle; leave off for other readers.
+                        <div class="fieldDescription checkboxFieldDescription" data-i18n="admin.conversionDesc">
+                            Sends "convert" as the subject line.
                         </div>
                     </div>
 
                     <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="MaxMessageSizeMb" data-i18n="maxSizeLabel">Maximum message size (MB)</label>
+                        <label class="inputLabel inputLabelUnfocused" for="MaxMessageSizeMb" data-i18n="admin.maxSizeLabel">
+                            Maximum message size (MB)
+                        </label>
                         <input id="MaxMessageSizeMb" type="number" is="emby-input" min="1" max="200" />
                         <div class="fieldDescription">
-                            <span data-i18n="maxSizeDesc">Provider limit for the whole email. Amazon allows 50 MB.</span>
+                            <span data-i18n="admin.maxSizeDesc">Provider limit for the whole email. Amazon allows 50 MB.</span>
                             <span id="effectiveLimit"></span>
                         </div>
                     </div>
                 </div>
 
                 <div class="verticalSection">
-                    <h2 class="sectionTitle" data-i18n="usersSection">Users</h2>
-                    <p class="fieldDescription" data-i18n="usersDesc">
-                        Every user sets their own reader address under Settings &gt; E-Book Share. Nobody can see or change another user's address.
+                    <h2 class="sectionTitle" data-i18n="admin.usersSection">Users</h2>
+                    <p class="fieldDescription" data-i18n="admin.usersDesc">
+                        Every user sets their own reader address under Settings &gt; E-Book Share.
                     </p>
                     <p class="fieldDescription">
-                        <span data-i18n="configuredCount">Addresses configured:</span> <span id="userCount">-</span>
+                        <span data-i18n="admin.configuredCount">Addresses configured:</span>
+                        <span id="userCount">-</span>
                     </p>
                 </div>
 
                 <div>
                     <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                        <span data-i18n="save">Save</span>
+                        <span data-i18n="admin.save">Save</span>
                     </button>
                 </div>
             </form>
@@ -139,8 +176,6 @@
         (function () {
             'use strict';
 
-            var PLUGIN_ID = 'e3b2b4a1-1234-4567-89ab-cdef12345678';
-
             var PRESETS = {
                 gmail: { host: 'smtp.gmail.com', port: 587, security: 1 },
                 outlook: { host: 'smtp-mail.outlook.com', port: 587, security: 1 },
@@ -149,66 +184,31 @@
                 mailbox: { host: 'smtp.mailbox.org', port: 465, security: 2 }
             };
 
-            var i18n = {
-                de: {
-                    smtpSection: 'Mailserver (SMTP)',
-                    smtpIntro: 'Diese Zugangsdaten werden für den Versand aller Nutzer dieses Servers verwendet.',
-                    presetLabel: 'Anbieter-Vorlage',
-                    presetCustom: 'Eigene Einstellungen',
-                    presetDesc: 'Füllt Host, Port und Verschlüsselung aus. Benutzername und Passwort musst du weiterhin eintragen.',
-                    hostLabel: 'SMTP-Host',
-                    hostDesc: 'Zum Beispiel smtp.gmail.com',
-                    portLabel: 'SMTP-Port',
-                    securityLabel: 'Verschlüsselung',
-                    secAuto: 'Automatisch (empfohlen)',
-                    secStartTls: 'STARTTLS (meist Port 587)',
-                    secSsl: 'SSL/TLS ab Verbindungsaufbau (meist Port 465)',
-                    secNone: 'Keine (nur für lokale Relays)',
-                    securityDesc: 'Port 465 benötigt "SSL/TLS ab Verbindungsaufbau". Frühere Versionen konnten nur STARTTLS — deshalb funktionierte Port 465 nie.',
-                    userLabel: 'Benutzername',
-                    userDesc: 'Leer lassen bei einem Relay ohne Anmeldung.',
-                    passwordLabel: 'Passwort',
-                    passwordDesc: 'Gmail, Outlook und die meisten Anbieter lehnen hier dein normales Kontopasswort ab. Lege stattdessen ein App-Passwort an.',
-                    senderLabel: 'Absenderadresse',
-                    senderDesc: 'Leer lassen, um den Benutzernamen zu verwenden. Diese Adresse muss im Reader-Konto freigegeben sein, sonst kommt jede Mail zurück.',
-                    senderNameLabel: 'Absendername',
-                    testButton: 'Verbindung testen',
-                    deliverySection: 'Versand',
-                    conversionLabel: 'Amazon um Konvertierung ins Kindle-Format bitten',
-                    conversionDesc: 'Sendet "convert" als Betreff. Nur für Amazon Kindle relevant — bei anderen Readern ausgeschaltet lassen.',
-                    maxSizeLabel: 'Maximale Nachrichtengröße (MB)',
-                    maxSizeDesc: 'Limit des Anbieters für die gesamte E-Mail. Amazon erlaubt 50 MB.',
-                    usersSection: 'Benutzer',
-                    usersDesc: 'Jeder Nutzer hinterlegt seine eigene Reader-Adresse unter Einstellungen > E-Book Share. Niemand kann die Adresse eines anderen sehen oder ändern.',
-                    configuredCount: 'Hinterlegte Adressen:',
-                    save: 'Speichern',
-                    testing: 'Teste Verbindung …',
-                    testOk: 'Verbindung erfolgreich. Der Server hat die Anmeldung akzeptiert.',
-                    saveFirst: 'Bitte zuerst speichern — getestet werden die gespeicherten Einstellungen.',
-                    saved: 'Einstellungen gespeichert.',
-                    effectiveLimit: 'Größte sendbare Datei: ca. {0} MB (Anhänge werden durch die Kodierung größer).'
-                },
-                en: {
-                    testing: 'Testing connection …',
-                    testOk: 'Connection successful. The server accepted the login.',
-                    saveFirst: 'Please save first — the test uses the stored settings.',
-                    saved: 'Settings saved.',
-                    effectiveLimit: 'Largest sendable file: about {0} MB (attachments grow when encoded).'
-                }
-            };
+            var page = document.querySelector('#KindleSettingsPage');
+            var strings = {};
+            var hasPassword = false;
 
-            var lang = (navigator.language || 'en').substring(0, 2).toLowerCase() === 'de' ? 'de' : 'en';
-
-            function t(key) {
-                return (i18n[lang] && i18n[lang][key]) || i18n.en[key] || key;
+            function uiLanguage() {
+                return document.documentElement.getAttribute('lang') || navigator.language || 'en';
             }
 
-            var page = document.querySelector('#KindleSettingsPage');
+            function isGerman() {
+                return uiLanguage().toLowerCase().indexOf('de') === 0;
+            }
+
+            // The English wording already sits in the markup, so a failed fetch leaves a
+            // usable page rather than a grid of raw keys.
+            function t(key) {
+                var value = strings[key] || key;
+                for (var i = 1; i < arguments.length; i++) {
+                    value = value.replace('{' + (i - 1) + '}', arguments[i]);
+                }
+                return value;
+            }
 
             function translate() {
-                if (lang !== 'de') return;
                 page.querySelectorAll('[data-i18n]').forEach(function (el) {
-                    var value = i18n.de[el.getAttribute('data-i18n')];
+                    var value = strings[el.getAttribute('data-i18n')];
                     if (value) el.textContent = value;
                 });
             }
@@ -224,7 +224,7 @@
                     })
                     .then(function (text) {
                         var body = JSON.parse(text || '{}');
-                        if (lang === 'de' && body.errorDe) return body.errorDe;
+                        if (isGerman() && body.errorDe) return body.errorDe;
                         if (body.error) return body.error;
                         return fallback;
                     })
@@ -233,39 +233,85 @@
                     });
             }
 
-            function notify(message) {
-                if (window.Dashboard && Dashboard.alert) {
-                    Dashboard.alert(message);
-                } else {
-                    alert(message);
-                }
+            function setResult(el, message, kind) {
+                el.style.color = kind === 'ok' ? '#4caf50' : kind === 'error' ? '#f44336' : '';
+                el.textContent = message;
             }
 
             function updateEffectiveLimit() {
                 var mb = parseInt(page.querySelector('#MaxMessageSizeMb').value, 10) || 50;
                 // Mirrors KindleFormatValidator.Base64Overhead on the server.
                 var effective = Math.round((mb / 1.37) * 10) / 10;
-                page.querySelector('#effectiveLimit').textContent = ' ' + t('effectiveLimit').replace('{0}', effective);
+                page.querySelector('#effectiveLimit').textContent = ' ' + t('admin.effectiveLimit', effective);
             }
 
-            function load(config) {
+            function apply(config) {
                 page.querySelector('#SmtpHost').value = config.SmtpHost || '';
                 page.querySelector('#SmtpPort').value = config.SmtpPort || 587;
-                page.querySelector('#Security').value = String(config.Security != null ? config.Security : 0);
+                page.querySelector('#Security').value = String(config.Security || 0);
                 page.querySelector('#SmtpUser').value = config.SmtpUser || '';
-                page.querySelector('#SmtpPassword').value = config.SmtpPassword || '';
                 page.querySelector('#SenderEmail').value = config.SenderEmail || '';
                 page.querySelector('#SenderName').value = config.SenderName || 'Jellyfin';
                 page.querySelector('#RequestConversion').checked = !!config.RequestConversion;
                 page.querySelector('#MaxMessageSizeMb').value = config.MaxMessageSizeMb || 50;
+                page.querySelector('#userCount').textContent = String(config.ConfiguredUserCount || 0);
 
-                var count = 0;
-                try {
-                    count = Object.keys(JSON.parse(config.UserKindleEmailsJson || '{}')).length;
-                } catch (e) { /* malformed config, show 0 */ }
-                page.querySelector('#userCount').textContent = String(count);
+                // The password is never sent to the browser. An empty field on save means
+                // "keep it"; removing it needs the explicit checkbox.
+                hasPassword = !!config.HasPassword;
+                page.querySelector('#SmtpPassword').value = '';
+                page.querySelector('#ClearPassword').checked = false;
+                page.querySelector('#clearPasswordRow').style.display = hasPassword ? '' : 'none';
+                page.querySelector('#passwordState').textContent =
+                    (hasPassword ? t('admin.passwordStored') : t('admin.passwordNone')) + ' ';
+
+                if (!page.querySelector('#TestMailAddress').value) {
+                    page.querySelector('#TestMailAddress').value = config.SenderEmail || '';
+                }
 
                 updateEffectiveLimit();
+            }
+
+            function collect() {
+                return {
+                    SmtpHost: page.querySelector('#SmtpHost').value.trim(),
+                    SmtpPort: parseInt(page.querySelector('#SmtpPort').value, 10) || 587,
+                    Security: parseInt(page.querySelector('#Security').value, 10) || 0,
+                    SmtpUser: page.querySelector('#SmtpUser').value.trim(),
+                    SmtpPassword: page.querySelector('#SmtpPassword').value,
+                    ClearPassword: page.querySelector('#ClearPassword').checked,
+                    SenderEmail: page.querySelector('#SenderEmail').value.trim(),
+                    SenderName: page.querySelector('#SenderName').value.trim() || 'Jellyfin',
+                    RequestConversion: page.querySelector('#RequestConversion').checked,
+                    MaxMessageSizeMb: parseInt(page.querySelector('#MaxMessageSizeMb').value, 10) || 50
+                };
+            }
+
+            function load() {
+                Dashboard.showLoadingMsg();
+
+                return window.ApiClient.ajax({
+                    type: 'GET',
+                    url: window.ApiClient.getUrl('KindlePlugin/Strings', { lang: uiLanguage() }),
+                    dataType: 'json'
+                }).then(function (result) {
+                    strings = result || {};
+                    translate();
+                }).catch(function () {
+                    /* markup keeps its English defaults */
+                }).then(function () {
+                    return window.ApiClient.ajax({
+                        type: 'GET',
+                        url: window.ApiClient.getUrl('Kindle/Admin/Config'),
+                        dataType: 'json'
+                    });
+                }).then(function (config) {
+                    apply(config);
+                }).catch(function () {
+                    Dashboard.alert(t('admin.loadFailed'));
+                }).finally(function () {
+                    Dashboard.hideLoadingMsg();
+                });
             }
 
             page.querySelector('#Preset').addEventListener('change', function () {
@@ -282,34 +328,49 @@
                 var result = page.querySelector('#testResult');
                 var button = this;
 
-                result.style.color = '';
-                result.textContent = t('testing');
+                setResult(result, t('admin.testing'), null);
                 button.disabled = true;
 
-                ApiClient.ajax({
+                window.ApiClient.ajax({
                     type: 'POST',
-                    url: ApiClient.getUrl('Kindle/TestConnection'),
+                    url: window.ApiClient.getUrl('Kindle/Admin/TestConnection'),
                     dataType: 'json'
                 }).then(function () {
-                    result.style.color = '#4caf50';
-                    result.textContent = t('testOk');
+                    setResult(result, t('admin.testOk'), 'ok');
                 }).catch(function (err) {
-                    result.style.color = '#f44336';
-                    localizedError(err, t('saveFirst')).then(function (message) {
-                        result.textContent = message;
+                    localizedError(err, t('admin.testFailed')).then(function (message) {
+                        setResult(result, message, 'error');
                     });
                 }).finally(function () {
                     button.disabled = false;
                 });
             });
 
-            page.addEventListener('pageshow', function () {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
-                    load(config);
-                    Dashboard.hideLoadingMsg();
-                }).catch(function () {
-                    Dashboard.hideLoadingMsg();
+            page.querySelector('#btnTestMail').addEventListener('click', function () {
+                var result = page.querySelector('#testMailResult');
+                var button = this;
+                var address = page.querySelector('#TestMailAddress').value.trim();
+
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(address)) {
+                    setResult(result, t('user.invalid'), 'error');
+                    return;
+                }
+
+                setResult(result, t('admin.testMailSending'), null);
+                button.disabled = true;
+
+                window.ApiClient.ajax({
+                    type: 'POST',
+                    url: window.ApiClient.getUrl('Kindle/Admin/TestMail', { address: address }),
+                    dataType: 'json'
+                }).then(function () {
+                    setResult(result, t('admin.testMailOk'), 'ok');
+                }).catch(function (err) {
+                    localizedError(err, t('admin.testFailed')).then(function (message) {
+                        setResult(result, message, 'error');
+                    });
+                }).finally(function () {
+                    button.disabled = false;
                 });
             });
 
@@ -317,34 +378,29 @@
                 e.preventDefault();
                 Dashboard.showLoadingMsg();
 
-                ApiClient.getPluginConfiguration(PLUGIN_ID).then(function (config) {
-                    config.SmtpHost = page.querySelector('#SmtpHost').value.trim();
-                    config.SmtpPort = parseInt(page.querySelector('#SmtpPort').value, 10) || 587;
-                    config.Security = parseInt(page.querySelector('#Security').value, 10) || 0;
-                    config.SmtpUser = page.querySelector('#SmtpUser').value.trim();
-                    config.SmtpPassword = page.querySelector('#SmtpPassword').value;
-                    config.SenderEmail = page.querySelector('#SenderEmail').value.trim();
-                    config.SenderName = page.querySelector('#SenderName').value.trim() || 'Jellyfin';
-                    config.RequestConversion = page.querySelector('#RequestConversion').checked;
-                    config.MaxMessageSizeMb = parseInt(page.querySelector('#MaxMessageSizeMb').value, 10) || 50;
-
-                    // Migrate() already folded UseSsl into Security; keep it consistent
-                    // so an older plugin build reading this file still behaves sanely.
-                    config.UseSsl = config.Security !== 3;
-                    config.ConfigVersion = 1;
-
-                    return ApiClient.updatePluginConfiguration(PLUGIN_ID, config);
-                }).then(function (result) {
-                    Dashboard.processPluginConfigurationUpdateResult(result);
-                }).catch(function () {
+                window.ApiClient.ajax({
+                    type: 'POST',
+                    url: window.ApiClient.getUrl('Kindle/Admin/Config'),
+                    data: JSON.stringify(collect()),
+                    contentType: 'application/json',
+                    dataType: 'json'
+                }).then(function () {
                     Dashboard.hideLoadingMsg();
-                    notify('Failed to save.');
+                    Dashboard.alert(t('admin.saved'));
+                    // Re-read so the password indicator reflects what is now stored.
+                    return load();
+                }).catch(function (err) {
+                    Dashboard.hideLoadingMsg();
+                    localizedError(err, t('admin.saveFailed')).then(function (message) {
+                        Dashboard.alert(message);
+                    });
                 });
 
                 return false;
             });
 
-            translate();
+            page.addEventListener('pageshow', load);
+            load();
         })();
     </script>
 </div>

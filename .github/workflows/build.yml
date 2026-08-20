@@ -17,18 +17,34 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          # .NET 9 builds the released Jellyfin 10.11 artifact, .NET 10 the Jellyfin 12
+          # compatibility gate below.
+          dotnet-version: |
+            9.0.x
+            10.0.x
 
       # Runs first: a version mismatch between the assembly and manifest.json makes
       # the plugin impossible to uninstall, and that must never reach a release.
       - name: Verify plugin identity
         run: python3 scripts/verify_version.py
 
+      - name: Verify UI strings
+        run: python3 scripts/verify_strings.py
+
       - name: Check client script syntax
         run: node --check Web/kindleButton.js
 
-      - name: Build
-        run: dotnet build -c Release --nologo
+      - name: Build (Jellyfin 10.11)
+        run: dotnet build Jellyfin.Plugin.Kindle.csproj -c Release --nologo
+
+      - name: Test
+        run: dotnet test tests/Jellyfin.Plugin.Kindle.Tests/Jellyfin.Plugin.Kindle.Tests.csproj -c Release --nologo
+
+      # Compile-only gate. Jellyfin 12 is still a release candidate so nothing is
+      # published from it, but a breaking API change should fail here rather than be
+      # discovered on release day.
+      - name: Build (Jellyfin 12 compatibility gate)
+        run: dotnet build Jellyfin.Plugin.Kindle.csproj -c Release --nologo -p:JellyfinTarget=jf12
 
       - name: Package
         run: bash scripts/package.sh

@@ -12,7 +12,8 @@ einen E-Book-Reader (Kindle, Kobo, PocketBook …) schickt.
   anderen.
 * **SMTP mit wählbarer Verschlüsselung** – STARTTLS (587), SSL/TLS ab Verbindungsaufbau
   (465), automatisch oder unverschlüsselt für lokale Relays.
-* **Verbindungstest** in der Admin-Oberfläche.
+* **Verbindungstest und Testnachricht** in der Admin-Oberfläche.
+* **Einträge im Jellyfin-Aktivitätsfeed** bei jedem Versand.
 * **Deutsch und Englisch**, abhängig von der in Jellyfin eingestellten Sprache.
 
 ## Installation
@@ -34,6 +35,13 @@ einen E-Book-Reader (Kindle, Kobo, PocketBook …) schickt.
 3. Absenderadresse eintragen (leer = Benutzername wird verwendet).
 4. **Verbindung testen** klicken. Der Test verwendet die *gespeicherten* Einstellungen,
    also vorher speichern.
+5. **Testnachricht senden** — das ist der wichtigere Test. Ein Verbindungstest beweist
+   nur, dass die Anmeldung klappt; er kann nicht erkennen, dass Amazon deine
+   Absenderadresse ablehnt und die Mail kommentarlos verwirft.
+
+Das SMTP-Passwort wird der Konfigurationsseite nie zurückgegeben. Ein leeres
+Passwortfeld beim Speichern bedeutet „unverändert"; zum Entfernen gibt es eine eigene
+Checkbox.
 
 ### Verschlüsselung richtig wählen
 
@@ -53,7 +61,8 @@ deshalb nie funktionieren.
 2. Ein Buch öffnen und **An Reader senden** klicken.
 
 Beim ersten Senden fragt das Plugin die Adresse direkt im Dialog ab, falls sie noch
-nicht hinterlegt ist.
+nicht hinterlegt ist. Über **Testnachricht senden** auf derselben Seite lässt sich
+prüfen, ob die Zustellung überhaupt funktioniert, ohne ein ganzes Buch zu verschicken.
 
 > **Amazon:** Die Absenderadresse des Servers muss unter *Meine Inhalte und Geräte →
 > Einstellungen → Persönliche Dokumente-Einstellungen* als genehmigter Absender
@@ -73,10 +82,28 @@ nicht hinterlegt ist.
 ## Entwicklung
 
 ```bash
-dotnet build -c Release          # bauen
-bash scripts/package.sh          # Release-Zip inkl. meta.json + Prüfsumme
-python3 scripts/verify_version.py # Versions-/Identitätsprüfung
+dotnet build -c Release                                   # Jellyfin 10.11 (Standard)
+dotnet build -c Release -p:JellyfinTarget=jf12            # Jellyfin 12 (Kompatibilitätstest)
+dotnet test                                               # Unit-Tests
+bash scripts/package.sh                                   # Release-Zip inkl. meta.json + Prüfsumme
+python3 scripts/verify_version.py                         # Versions-/Identitätsprüfung
+python3 scripts/verify_strings.py                         # Übersetzungsprüfung
 ```
+
+### Jellyfin 12
+
+Aus derselben Quelle lassen sich zwei Artefakte bauen: `jf10` (Jellyfin 10.11, .NET 9)
+und `jf12` (Jellyfin 12, .NET 10). Veröffentlicht wird zurzeit **nur `jf10`** — Jellyfin
+12 ist noch ein Release Candidate. Die CI kompiliert den `jf12`-Zweig trotzdem bei jedem
+Build, damit ein API-Bruch sofort auffällt und nicht erst am Release-Tag.
+
+### Übersetzungen beitragen
+
+Alle Oberflächentexte liegen in `Localization/<sprachcode>.json` und werden von allen
+drei Frontends (Button, Admin-Seite, Benutzerseite) gemeinsam genutzt. Eine neue Sprache
+ist eine Kopie von `en.json` mit übersetzten Werten — keine Codeänderung nötig. Die
+Datei wird automatisch eingebettet, `scripts/verify_strings.py` prüft im Build, dass
+keine Schlüssel fehlen oder überflüssig sind.
 
 ### Version anheben
 

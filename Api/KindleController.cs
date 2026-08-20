@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.Kindle.Configuration;
 using Jellyfin.Plugin.Kindle.Services;
+using Jellyfin.Database.Implementations.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Net;
+using MediaBrowser.Model.Activity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -25,6 +27,7 @@ namespace Jellyfin.Plugin.Kindle.Api
         private readonly ILibraryManager _libraryManager;
         private readonly IUserManager _userManager;
         private readonly IAuthorizationContext _authContext;
+        private readonly IActivityManager _activityManager;
         private readonly KindleMailService _mailService;
         private readonly ILogger<KindleController> _logger;
 
@@ -32,12 +35,14 @@ namespace Jellyfin.Plugin.Kindle.Api
             ILibraryManager libraryManager,
             IUserManager userManager,
             IAuthorizationContext authContext,
+            IActivityManager activityManager,
             KindleMailService mailService,
             ILogger<KindleController> logger)
         {
             _libraryManager = libraryManager;
             _userManager = userManager;
             _authContext = authContext;
+            _activityManager = activityManager;
             _mailService = mailService;
             _logger = logger;
         }
@@ -52,7 +57,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
             var userId = await GetCallerUserIdAsync().ConfigureAwait(false);
@@ -123,7 +128,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
             // The caller is taken from the authenticated session, never from the
@@ -138,13 +143,13 @@ namespace Jellyfin.Plugin.Kindle.Api
             var item = _libraryManager.GetItemById(itemId);
             if (item is null || !IsVisibleTo(item, userId))
             {
-                return NotFound(Error("Item not found.", "Buch nicht gefunden."));
+                return NotFound(ErrorPayload("Item not found.", "Buch nicht gefunden."));
             }
 
             var extension = Path.GetExtension(item.Path);
             if (!KindleFormatValidator.IsCompatible(extension))
             {
-                return BadRequest(Error(
+                return BadRequest(ErrorPayload(
                     $"Format '{extension}' is not supported by your reader.",
                     $"Format '{extension}' wird vom E-Book Reader nicht unterstützt.",
                     "FORMAT"));
@@ -152,7 +157,7 @@ namespace Jellyfin.Plugin.Kindle.Api
 
             if (string.IsNullOrEmpty(item.Path) || !System.IO.File.Exists(item.Path))
             {
-                return NotFound(Error("File not found on disk.", "Datei nicht auf der Festplatte gefunden."));
+                return NotFound(ErrorPayload("File not found on disk.", "Datei nicht auf der Festplatte gefunden."));
             }
 
             var fileInfo = new FileInfo(item.Path);
@@ -161,7 +166,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             {
                 var sizeMb = fileInfo.Length / (1024.0 * 1024.0);
                 var maxMb = maxBytes / (1024.0 * 1024.0);
-                return BadRequest(Error(
+                return BadRequest(ErrorPayload(
                     $"File is too large ({sizeMb:F1} MB). The limit is {maxMb:F1} MB.",
                     $"Datei ist zu groß ({sizeMb:F1} MB). Das Limit liegt bei {maxMb:F1} MB.",
                     "TOO_LARGE"));
@@ -170,13 +175,13 @@ namespace Jellyfin.Plugin.Kindle.Api
             var kindleEmail = config.GetUserEmail(userId.ToString("N"));
             if (kindleEmail is null)
             {
-                return BadRequest(Error(
+                return BadRequest(ErrorPayload(
                     "No reader email configured. Please set it in your user settings.",
                     "Keine E-Book Reader E-Mail hinterlegt. Bitte in den Benutzereinstellungen konfigurieren.",
                     "NO_KINDLE_EMAIL"));
             }
 
-            var attachmentName = BuildAttachmentName(item.Name, extension);
+            var attachmentName = Validation.BuildAttachmentName(item.Name, extension);
 
             await SendGate.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
@@ -185,13 +190,15 @@ namespace Jellyfin.Plugin.Kindle.Api
                     .SendBookAsync(kindleEmail, item.Path, attachmentName, config, cancellationToken)
                     .ConfigureAwait(false);
 
+                await LogActivityAsync(userId, item.Name, result).ConfigureAwait(false);
+
                 if (result.Success)
                 {
                     _logger.LogInformation("[E-Book Share] '{Name}' sent for user {UserId}.", item.Name, userId);
                     return Ok(new { message = "Sent to your reader.", messageDe = "An E-Book Reader gesendet." });
                 }
 
-                return StatusCode(502, DescribeFailure(result));
+                return StatusCode(502, DescribeMailFailure(result));
             }
             finally
             {
@@ -205,7 +212,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
             var userId = await GetCallerUserIdAsync().ConfigureAwait(false);
@@ -223,7 +230,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
             var userId = await GetCallerUserIdAsync().ConfigureAwait(false);
@@ -233,9 +240,9 @@ namespace Jellyfin.Plugin.Kindle.Api
             }
 
             var trimmed = email?.Trim() ?? string.Empty;
-            if (!IsPlausibleEmail(trimmed))
+            if (!Validation.IsPlausibleEmailAddress(trimmed))
             {
-                return BadRequest(Error("Invalid email format.", "Ungültiges E-Mail-Format."));
+                return BadRequest(ErrorPayload("Invalid email format.", "Ungültiges E-Mail-Format."));
             }
 
             config.SetUserEmail(userId.ToString("N"), trimmed);
@@ -251,7 +258,7 @@ namespace Jellyfin.Plugin.Kindle.Api
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
             var userId = await GetCallerUserIdAsync().ConfigureAwait(false);
@@ -268,23 +275,83 @@ namespace Jellyfin.Plugin.Kindle.Api
         }
 
         /// <summary>
-        /// Verifies the stored SMTP settings from the admin page without sending a book.
+        /// Sends a short test message to the caller's own stored address.
         /// </summary>
-        [HttpPost("TestConnection")]
-        [Authorize(Policy = "RequiresElevation")]
-        public async Task<IActionResult> TestConnection(CancellationToken cancellationToken)
+        /// <remarks>
+        /// The connection test on the admin page cannot prove delivery: Amazon accepts
+        /// the SMTP session and then discards mail whose sender is not on the account's
+        /// approved list, with no bounce. Letting the user send a tiny message makes
+        /// that failure visible without pushing a 30 MB book through the provider.
+        /// </remarks>
+        [HttpPost("TestMail")]
+        public async Task<IActionResult> SendTestMail(CancellationToken cancellationToken)
         {
             var config = GetConfiguration();
             if (config is null)
             {
-                return StatusCode(503, Error("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
+                return StatusCode(503, ErrorPayload("Plugin is not initialized.", "Plugin ist nicht initialisiert."));
             }
 
-            var result = await _mailService.TestConnectionAsync(config, cancellationToken).ConfigureAwait(false);
+            var userId = await GetCallerUserIdAsync().ConfigureAwait(false);
+            if (userId == Guid.Empty)
+            {
+                return Forbid();
+            }
 
-            return result.Success
-                ? Ok(new { message = "Connection successful.", messageDe = "Verbindung erfolgreich." })
-                : StatusCode(502, DescribeFailure(result));
+            var recipient = config.GetUserEmail(userId.ToString("N"));
+            if (recipient is null)
+            {
+                return BadRequest(ErrorPayload(
+                    "Save a reader address first.",
+                    "Bitte zuerst eine Reader-Adresse speichern.",
+                    "NO_KINDLE_EMAIL"));
+            }
+
+            await SendGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                var result = await _mailService.SendTestAsync(recipient, config, cancellationToken).ConfigureAwait(false);
+
+                return result.Success
+                    ? Ok(new { message = "Test message sent.", messageDe = "Testnachricht versendet." })
+                    : StatusCode(502, DescribeMailFailure(result));
+            }
+            finally
+            {
+                SendGate.Release();
+            }
+        }
+
+        /// <summary>
+        /// Mirrors sends into the dashboard activity feed. Failures here are swallowed:
+        /// a book that was delivered must not be reported as failed because the
+        /// bookkeeping entry could not be written.
+        /// </summary>
+        private async Task LogActivityAsync(Guid userId, string? itemName, MailResult result)
+        {
+            try
+            {
+                var user = _userManager.GetUserById(userId);
+                var userName = user?.Username ?? userId.ToString("N");
+                var title = itemName ?? "a book";
+
+                var entry = new ActivityLog(
+                    result.Success
+                        ? $"{userName} sent \"{title}\" to their e-book reader"
+                        : $"Sending \"{title}\" to {userName}'s e-book reader failed",
+                    "EBookShare",
+                    userId)
+                {
+                    ShortOverview = result.Success ? null : result.Detail,
+                    LogSeverity = result.Success ? LogLevel.Information : LogLevel.Error
+                };
+
+                await _activityManager.CreateAsync(entry).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "[E-Book Share] Could not write the activity log entry.");
+            }
         }
 
         private PluginConfiguration? GetConfiguration() => Plugin.Instance?.Configuration;
@@ -308,77 +375,32 @@ namespace Jellyfin.Plugin.Kindle.Api
             return item.IsVisible(user);
         }
 
-        /// <summary>
-        /// Uses the library item's name for the attachment so the reader shows the
-        /// book title instead of the on-disk filename, while keeping the file system
-        /// characters that would break a MIME filename out of it.
-        /// </summary>
-        private static string BuildAttachmentName(string? itemName, string extension)
-        {
-            var name = string.IsNullOrWhiteSpace(itemName) ? "book" : itemName.Trim();
-
-            foreach (var invalid in Path.GetInvalidFileNameChars())
-            {
-                name = name.Replace(invalid, '_');
-            }
-
-            name = name.Replace('"', '_').Replace('\\', '_').Replace('/', '_');
-
-            if (name.Length > 100)
-            {
-                name = name[..100].TrimEnd();
-            }
-
-            return name + extension;
-        }
-
-        private static bool IsPlausibleEmail(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email) || email.Length > 254)
-            {
-                return false;
-            }
-
-            var at = email.IndexOf('@', StringComparison.Ordinal);
-            if (at <= 0 || at != email.LastIndexOf('@'))
-            {
-                return false;
-            }
-
-            var domain = email[(at + 1)..];
-            return domain.Length >= 3
-                   && domain.Contains('.', StringComparison.Ordinal)
-                   && !domain.StartsWith('.')
-                   && !domain.EndsWith('.')
-                   && !email.Contains(' ', StringComparison.Ordinal);
-        }
-
-        private static object Error(string en, string de, string? code = null) =>
+        internal static object ErrorPayload(string en, string de, string? code = null) =>
             new { error = en, errorDe = de, code };
 
-        private static object DescribeFailure(MailResult result) => result.Failure switch
+        internal static object DescribeMailFailure(MailResult result) => result.Failure switch
         {
-            MailFailure.NotConfigured => Error(
+            MailFailure.NotConfigured => ErrorPayload(
                 "SMTP is not configured. Ask your administrator to fill in the plugin settings.",
                 "SMTP ist nicht konfiguriert. Bitte den Administrator, die Plugin-Einstellungen auszufüllen.",
                 "SMTP_NOT_CONFIGURED"),
-            MailFailure.Authentication => Error(
+            MailFailure.Authentication => ErrorPayload(
                 "SMTP login failed. Check username and password (an app password is usually required).",
                 "SMTP-Anmeldung fehlgeschlagen. Benutzername und Passwort prüfen (meist wird ein App-Passwort benötigt).",
                 "SMTP_AUTH"),
-            MailFailure.Connection => Error(
+            MailFailure.Connection => ErrorPayload(
                 "Could not reach the SMTP server. Check host, port and encryption mode.",
                 "SMTP-Server nicht erreichbar. Host, Port und Verschlüsselungsmodus prüfen.",
                 "SMTP_CONNECTION"),
-            MailFailure.Timeout => Error(
+            MailFailure.Timeout => ErrorPayload(
                 "The SMTP server did not respond in time.",
                 "Der SMTP-Server hat nicht rechtzeitig geantwortet.",
                 "SMTP_TIMEOUT"),
-            MailFailure.Rejected => Error(
+            MailFailure.Rejected => ErrorPayload(
                 $"The mail server rejected the message: {result.Detail}",
                 $"Der Mailserver hat die Nachricht abgelehnt: {result.Detail}",
                 "SMTP_REJECTED"),
-            _ => Error(
+            _ => ErrorPayload(
                 "Failed to send email. Please check the SMTP settings.",
                 "E-Mail-Versand fehlgeschlagen. Bitte SMTP-Einstellungen prüfen.",
                 "SMTP_UNKNOWN")

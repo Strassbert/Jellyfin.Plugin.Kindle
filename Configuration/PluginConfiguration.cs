@@ -28,7 +28,8 @@ namespace Jellyfin.Plugin.Kindle.Configuration
 
     public class PluginConfiguration : BasePluginConfiguration
     {
-        private const int CurrentConfigVersion = 1;
+        /// <summary>Bumped whenever <see cref="Migrate"/> gains a new upgrade step.</summary>
+        public const int LatestConfigVersion = 1;
 
         private readonly object _emailLock = new();
 
@@ -146,7 +147,7 @@ namespace Jellyfin.Plugin.Kindle.Configuration
         /// </summary>
         public void Migrate()
         {
-            if (ConfigVersion >= CurrentConfigVersion)
+            if (ConfigVersion >= LatestConfigVersion)
             {
                 return;
             }
@@ -163,7 +164,7 @@ namespace Jellyfin.Plugin.Kindle.Configuration
                     : SmtpSecurity.Auto);
             }
 
-            ConfigVersion = CurrentConfigVersion;
+            ConfigVersion = LatestConfigVersion;
         }
 
         private Dictionary<string, string> ReadEmails()

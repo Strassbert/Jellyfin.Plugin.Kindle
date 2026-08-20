@@ -23,7 +23,9 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: |
+            9.0.x
+            10.0.x
 
       - name: Resolve version
         id: version
@@ -37,6 +39,11 @@ jobs:
           fi
           echo "version=$CSPROJ_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Test
+        run: dotnet test tests/Jellyfin.Plugin.Kindle.Tests/Jellyfin.Plugin.Kindle.Tests.csproj -c Release --nologo
+
+      # Only the Jellyfin 10.11 artifact is published; jf12 stays a build gate while
+      # Jellyfin 12 is a release candidate.
       - name: Build and package
         id: package
         run: bash scripts/package.sh
@@ -47,6 +54,7 @@ jobs:
             --version "${{ steps.package.outputs.version }}" \
             --checksum "${{ steps.package.outputs.checksum }}" \
             --source-url "https://github.com/${{ github.repository }}/releases/download/${{ steps.package.outputs.version }}/Jellyfin.Plugin.Kindle_${{ steps.package.outputs.version }}.zip" \
+            --target-abi "${{ steps.package.outputs.targetAbi }}" \
             --changelog "See the release notes for ${{ steps.package.outputs.version }}." \
             --timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 

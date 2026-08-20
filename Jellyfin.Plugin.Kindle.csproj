@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <!-- Build target selector. One artifact per runtime, never one assembly for both:
+           -p:JellyfinTarget=jf10  ->  Jellyfin 10.11, .NET 9   (default, released)
+           -p:JellyfinTarget=jf12  ->  Jellyfin 12,    .NET 10  (build gate only)
+         Jellyfin 12 is still a release candidate, so CI compiles the jf12 branch to
+         catch API breakage early but only the jf10 artifact is published. -->
+    <JellyfinTarget Condition="'$(JellyfinTarget)' == ''">jf10</JellyfinTarget>
+
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
@@ -28,11 +34,28 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(JellyfinTarget)' == 'jf10'">
+    <TargetFramework>net9.0</TargetFramework>
+    <!-- Pinned to the lowest supported 10.11 patch: a newer host satisfies a lower
+         reference, so one artifact loads across the whole 10.11.x line. -->
+    <JellyfinVersion>10.11.6</JellyfinVersion>
+    <PluginTargetAbi>10.11.0.0</PluginTargetAbi>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(JellyfinTarget)' == 'jf12'">
+    <TargetFramework>net10.0</TargetFramework>
+    <JellyfinVersion>12.0.0-rc5</JellyfinVersion>
+    <PluginTargetAbi>12.0.0.0</PluginTargetAbi>
+    <DefineConstants>$(DefineConstants);JELLYFIN12</DefineConstants>
+    <!-- Referencing a prerelease package is intentional here. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Jellyfin.Controller" Version="10.11.6">
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Jellyfin.Model" Version="10.11.6">
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <!-- 4.14.x carries known advisories (GHSA-9j88-vvj5-vhgr / GHSA-g7hc-96xr-gvvx). -->
@@ -45,8 +68,24 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Jellyfin.Plugin.Kindle.Tests" />
+  </ItemGroup>
+
+  <!-- The SDK's default glob is **/*.cs, which would otherwise pull the test project's
+       sources into the plugin assembly. -->
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+    <None Remove="tests/**" />
+    <EmbeddedResource Remove="tests/**" />
+    <Compile Remove="artifacts/**" />
+    <None Remove="artifacts/**" />
+    <EmbeddedResource Remove="artifacts/**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Configuration\*.html" />
     <EmbeddedResource Include="Web\*.js" />
+    <EmbeddedResource Include="Localization\*.json" />
   </ItemGroup>
 
 </Project>
